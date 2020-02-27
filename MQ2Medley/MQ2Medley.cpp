@@ -241,16 +241,16 @@ void MQ2MedleyDoCommand(PSPAWNINFO pChar, PCHAR szLine)
 
 int GemCastTime(const std::string & spellName) // Gem 1 to NUM_SPELL_GEMS
 {
-	DWORD n = 0;
+	VePointer<CONTENTS>pc;
 	for (int i = 0; i < NUM_SPELL_GEMS; i++)
 	{
 		PSPELL pSpell = GetSpellByID(GetCharInfo2()->MemorizedSpells[i]);
 		if (pSpell && spellName.compare(pSpell->Name) == 0) {
-			float mct = (FLOAT)(pCharData1->GetAACastingTimeModifier((EQ_Spell*)pSpell) + pCharData1->GetFocusCastingTimeModifier((EQ_Spell*)pSpell, (EQ_Equipment**)&n, 0) + pSpell->CastTime) / 1000.0f;
+			const auto mct = static_cast<FLOAT>(GetCastingTimeModifier(reinterpret_cast<EQ_Spell*>(pSpell)) + GetFocusCastingTimeModifier(
+				reinterpret_cast<EQ_Spell*>(pSpell), pc, false) + pSpell->CastTime) / 1000.0f;
 			if (mct < 0.50 * pSpell->CastTime / 1000.0f)
-				return (int)(0.50 * (pSpell->CastTime / 100.0f));
-			else
-				return (int)(mct * 10);
+				return static_cast<int>(0.50 * (pSpell->CastTime / 100.0f));
+			return static_cast<int>(mct * 10);
 		}
 	}
 
@@ -904,7 +904,7 @@ PLUGIN_API VOID OnPulse(VOID)
 
 	if (pCastingWnd) {
 		PCSIDLWND pCastingWindow = (PCSIDLWND)pCastingWnd;
-		if (pCastingWindow->dShow == 1)
+		if (pCastingWindow->IsVisible())
 			return;
 		// Don't try to twist if the casting window is up, it implies the previous song 
 		// is still casting, or the user is manually casting a song between our twists 

@@ -30,13 +30,8 @@ BOOL DataSpellsType(PCHAR Index, MQ2TYPEVAR &dest) {
 }
 PreSetup("MQ2TangBot");
 
-// Called once, when the plugin is to initialize
 PLUGIN_API VOID InitializePlugin(VOID)
 {
-    //Add commands, MQ2Data items, hooks, etc.
-    //AddCommand("/mycommand",MyCommand);
-    //AddXMLFile("MQUI_MyXMLFile.xml");
-    //bmMyBenchmark=AddMQ2Benchmark("My Benchmark Name");
 	pTangBotType = new MQ2TangBotType;
 	pSpellsType = new MQ2SpellsType;
 	pQueueType = new MQ2QueueType;
@@ -51,7 +46,6 @@ PLUGIN_API VOID InitializePlugin(VOID)
 	AddCommand("/echospells", MQ2EchoSpellsCommand);
 }
 
-// Called once, when the plugin is to shutdown
 PLUGIN_API VOID ShutdownPlugin(VOID)
 {
 	RemoveMQ2Type(*pQueueType);
@@ -66,10 +60,6 @@ PLUGIN_API VOID ShutdownPlugin(VOID)
 	RemoveCommand("/setcamp");
 	RemoveCommand("/grouphp");
 	RemoveCommand("/echospells");
-    //Remove commands, MQ2Data items, hooks, etc.
-    //RemoveMQ2Benchmark(bmMyBenchmark);
-    //RemoveCommand("/mycommand");
-    //RemoveXMLFile("MQUI_MyXMLFile.xml");
 }
 
 VOID MQ2SetCampCommand(PSPAWNINFO pChar, PCHAR szLine)
@@ -89,7 +79,6 @@ VOID MQ2LoadSpellsCommand(PSPAWNINFO pChar, PCHAR szLine)
 VOID MQ2EchoSpellsCommand(PSPAWNINFO pChar, PCHAR szLine)
 {
 	pSpellsType->EchoSpells();
-
 }
 
 MQ2TangBotType::MQ2TangBotType() :MQ2Type("TangBot") {
@@ -153,6 +142,7 @@ bool MQ2TangBotType::ValidGroupMember(PCHARINFO pChar, int groupIndex) {
 }
 
 bool MQ2TangBotType::SetupCamp() {
+
 	//There are faster ways (Welzl's Algorithm) but that's too much work, this is a small list of points so n^4 doesn't matter
 	const auto pChar = GetCharInfo();
 	auto x = pChar->pSpawn->X, y = pChar->pSpawn->Y, z = pChar->pSpawn->Z;
@@ -1276,8 +1266,11 @@ void MQ2SpellsType::SetMezSpell(const std::string& spellType, PSPELL spell, int 
 
 long long MQ2SpellsType::GetCastTime(PSPELL spell)
 {
+
+	VePointer<CONTENTS>pc;
 	DWORD n = 0;
-	__int64 mct = (__int64)(GetAACastingTimeModifier((EQ_Spell*)spell) + GetFocusCastingTimeModifier((EQ_Spell*)spell, (EQ_Equipment**)&n, 0) + spell->CastTime);
+	const auto mct = static_cast<__int64>(GetCastingTimeModifier(reinterpret_cast<EQ_Spell*>(spell)) + GetFocusCastingTimeModifier(
+		reinterpret_cast<EQ_Spell*>(spell), pc, false) + spell->CastTime);
 	if (mct < (spell->CastTime / 2))
 		return spell->CastTime / 2;
 	return mct;
