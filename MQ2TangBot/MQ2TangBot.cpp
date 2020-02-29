@@ -270,7 +270,17 @@ bool MQ2TangBotType::GETMEMBER() {
 				break;
 			}
 			const auto spawnId = GETNUMBER();
+			if(spawnId==0)
+			{
+				returnValue = false;
+				break;
+			}
 			const auto spawn = reinterpret_cast<PSPAWNINFO>(GetSpawnByID(spawnId));
+			if(!spawn)
+			{
+				returnValue = false;
+				break;
+			}
 			Dest.DWord = (Distance(_campX, _campY, spawn->X, spawn->Y) <= GetCampRadius(spawn));
 			Dest.Type = pBoolType;
 			break;
@@ -663,6 +673,23 @@ bool MQ2SpellsType::ConfigureSpells() {
 					case EQCharacterClasses::Cleric:
 						spellType = "HealProc";
 						break;
+					case EQCharacterClasses::Paladin:
+						if (spell->spaindex == 19)
+						{
+							if(spell->ReuseTimerIndex==12)
+							{
+								spellType = "DefensiveProc";
+							}
+							else
+							{
+								spellType = "FuryProc";
+							}
+						}
+						else if(strstr(spell->Name,"Remorse"))
+						{
+							spellType = "RemorseProc";
+						}
+						break;
 					case EQCharacterClasses::Magician:
 						spellType = "DefensiveProc";
 						break;
@@ -678,6 +705,8 @@ bool MQ2SpellsType::ConfigureSpells() {
 						else if (strstr(spell->Name, "Mana")) {
 							spellType = "ManaFlare";
 						}
+						break;
+					default:
 						break;
 					}
 					break;
@@ -916,6 +945,7 @@ bool MQ2SpellsType::ConfigureSpells() {
 				{
 				case SpellSubCategories::MeleeGuard:
 				case SpellSubCategories::HPBuffs:
+				case SpellSubCategories::Heals:
 					spellType = "Aura";
 					break;
 				case SpellSubCategories::Mana:

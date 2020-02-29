@@ -1,5 +1,4 @@
 
-
 // MQ2Medley.cpp - Bard song scheduling plugin for MacroQuest2 
 // 
 // Changelog
@@ -112,6 +111,7 @@ public:
 	};
 
 	std::string name;
+	std::string key;
 	SpellType type;
 	bool once;					// is this a cast once spell? 
 	int castTime;				// 10ths of second
@@ -138,8 +138,8 @@ long CAST_PAD_TIME = 3;                  // in 10ths of seconds, to give spell t
 std::list<SongData> medley;                // medley[n] = stores medley list
 std::string medleyName;
 
-std::map< std::string,__int64 > songExpires;   // when cast, songExpires["songName"] = GetTime() * SongDurationSeconds*10
-									  // song to song state variables
+std::map< std::string, __int64 > songExpires;   // when cast, songExpires["songKey"] = GetTime() * SongDurationSeconds*10
+												// song to song state variables
 SongData currentSong = nullSong;
 boolean bWasInterrupted = false;
 __int64 CastDue = 0;
@@ -235,6 +235,10 @@ long GetAACastTime(std::string AAName)
 
 void MQ2MedleyDoCommand(PSPAWNINFO pChar, PCHAR szLine)
 {
+	if(!pChar)
+	{
+		pChar = ((PSPAWNINFO)pCharSpawn);
+	}
 	DebugSpew("MQ2Medley::MQ2MedleyDoCommand(pChar, %s)", szLine);
 	HideDoCommand(pChar, szLine, FromPlugin);
 }
@@ -242,15 +246,16 @@ void MQ2MedleyDoCommand(PSPAWNINFO pChar, PCHAR szLine)
 int GemCastTime(const std::string & spellName) // Gem 1 to NUM_SPELL_GEMS
 {
 	VePointer<CONTENTS>pc;
+	DWORD n = 0;
 	for (int i = 0; i < NUM_SPELL_GEMS; i++)
 	{
 		PSPELL pSpell = GetSpellByID(GetCharInfo2()->MemorizedSpells[i]);
 		if (pSpell && spellName.compare(pSpell->Name) == 0) {
-			const auto mct = static_cast<FLOAT>(GetCastingTimeModifier(reinterpret_cast<EQ_Spell*>(pSpell)) + GetFocusCastingTimeModifier(
-				reinterpret_cast<EQ_Spell*>(pSpell), pc, false) + pSpell->CastTime) / 1000.0f;
+			float mct = (FLOAT)(GetCastingTimeModifier ((EQ_Spell*)pSpell) + pCharData1->GetFocusCastingTimeModifier((EQ_Spell*)pSpell, pc, 0) + pSpell->CastTime) / 1000.0f;
 			if (mct < 0.50 * pSpell->CastTime / 1000.0f)
-				return static_cast<int>(0.50 * (pSpell->CastTime / 100.0f));
-			return static_cast<int>(mct * 10);
+				return (int)(0.50 * (pSpell->CastTime / 100.0f));
+			else
+				return (int)(mct * 10);
 		}
 	}
 
@@ -283,7 +288,7 @@ SongData getSongData(const char * name)
 {
 	std::string spellName = name;  // gem spell, item, or AA
 
-							  // if spell name is a # convert to name for that gem
+								   // if spell name is a # convert to name for that gem
 	const int spellNum = (int)strtol(name, NULL, 10);   // will return 0 on the strings
 	if (spellNum>0 && spellNum <= NUM_SPELL_GEMS) {
 		DebugSpew("MQ2Medley::TwistCommand Parsing gem %d", spellNum);
@@ -327,9 +332,8 @@ long doCast(const SongData SongTodo)
 	DebugSpew("MQ2Medley::doCast(%s) ENTER", SongTodo.name.c_str());
 	//WriteChatf("MQ2Medley::doCast(%s) ENTER", SongTodo.name.c_str());
 	char szTemp[MAX_STRING] = { 0 };
-
-	switch (SongTodo.type) {
-	case SongData::SONG:
+	if(SongTodo.type == SongData::SONG)
+	{
 		for (int i = 0; i < NUM_SPELL_GEMS; i++)
 		{
 			PSPELL pSpell = GetSpellByID(GetCharInfo2()->MemorizedSpells[i]);
@@ -350,7 +354,7 @@ long doCast(const SongData SongTodo)
 				}
 
 				sprintf_s(szTemp, "/multiline ; /stopsong ; /cast %d", gemNum);
-				MQ2MedleyDoCommand(NULL, szTemp);
+				MQ2MedleyDoCommand(((PSPAWNINFO)pCharSpawn), szTemp);
 
 				return SongTodo.castTime;
 			}
@@ -358,22 +362,22 @@ long doCast(const SongData SongTodo)
 		WriteChatf("MQ2Medley::doCast - could not find \"%s\" to cast, SKIPPING", SongTodo.name.c_str());
 
 		return -1;
-		break;
-	case SongData::ITEM:
+	}
+	if (SongTodo.type == SongData::ITEM)
+	{
 		DebugSpew("MQ2Medley::doCast - Next Song (Casting Item  \"%s\")", SongTodo.name.c_str());
 		sprintf_s(szTemp, "/multiline ; /stopsong ; /cast item \"%s\"", SongTodo.name.c_str());
-		MQ2MedleyDoCommand(NULL, szTemp);
+		MQ2MedleyDoCommand(((PSPAWNINFO)pCharSpawn), szTemp);
 		return SongTodo.castTime;
-	case SongData::AA:
+	}
+	if (SongTodo.type == SongData::AA)
+	{
 		DebugSpew("MQ2Medley::doCast - Next Song (Casting AA  \"%s\")", SongTodo.name.c_str());
 		sprintf_s(szTemp, "/multiline ; /stopsong ; /alt act ${Me.AltAbility[%s].ID}", SongTodo.name.c_str());
-		MQ2MedleyDoCommand(NULL, szTemp);
+		MQ2MedleyDoCommand(((PSPAWNINFO)pCharSpawn), szTemp);
 		return SongTodo.castTime;
-	default:
-		// This is the null song - do nothing. 
-		WriteChatf("MQ2Medley::doCast - unsupported type %d for \"%s\", SKIPPING", SongTodo.type, SongTodo.name.c_str());
-		return -1; // todo
 	}
+	return  -1;
 }
 
 template <unsigned int _Size>LPSTR SafeItoa(int _Value, char(&_Buffer)[_Size], int _Radix)
@@ -426,12 +430,12 @@ void Load_MQ2Medley_INI_Medley(PCHARINFO pCharInfo, std::string medleyName)
 		if (GetPrivateProfileString(iniSection.c_str(), iniKey.c_str(), "", szTemp, MAX_STRING, INIFileName))
 		{
 			SongData medleySong = nullSong;
-
 			//ugly ass split logic, example: song1=War March of Jocelyn^180.0^${Melee.Combat}
 			char *p = strtok_s(szTemp, "^", &pNext);
 			if (p)
 			{
 				medleySong = getSongData(p);
+				medleySong.key = medleySong.name;
 				if (medleySong.type == SongData::NOT_FOUND) {
 					WriteChatf("MQ2Medley::loadMedley - could not find song named \"%s\"", p);
 					continue;
@@ -445,6 +449,7 @@ void Load_MQ2Medley_INI_Medley(PCHARINFO pCharInfo, std::string medleyName)
 						if (p = strtok_s(NULL, "^", &pNext))
 						{
 							medleySong.targetExp = p;
+							medleySong.key = medleySong.name + "-" + p;
 						}
 					}
 				}
@@ -473,8 +478,6 @@ void StopTwistCommand(PSPAWNINFO pChar, PCHAR szLine)
 		WriteChatf("\arMQ2Medley\au::\atStopping Medley");
 	WritePrivateProfileString("MQ2Medley", "Playing", SafeItoa(bTwist, szTemp, 10), INIFileName);
 }
-
-
 
 void DisplayMedleyHelp() {
 	WriteChatf("\arMQ2Medley \au- \atSong Scheduler - read documentation online");
@@ -836,7 +839,7 @@ const SongData scheduleNextSong()
 			continue;
 		}
 		if (!song->evalCondition()) {
-			DebugSpew("MQ2Medley::scheduleNextSong skipping[%s] (condition not met)", song->name.c_str());
+			//DebugSpew("MQ2Medley::scheduleNextSong skipping[%s] (condition not met)", song->name.c_str());
 			continue;
 		}
 
@@ -852,8 +855,8 @@ const SongData scheduleNextSong()
 		// for a 3s casting time song, we should recast if it will expire in the next 6 seconds
 		// the constant 3 seconds is we will assume if we don't cast this song now, the next song will probably be a 3
 		// second cast time song
-		long long startCastBy = songExpires[song->name] - song->castTime - 30;
-		if (DebugMode) WriteChatf("MQ2Medley::scheduleNextSong time till need to cast %s: %I64d 10th sec", song->name.c_str(), startCastBy - currentTick);
+		long long startCastBy = songExpires[song->key] - song->castTime - 30;
+		if (DebugMode) WriteChatf("MQ2Medley::scheduleNextSong time till need to cast %s: %I64d 10th sec", song->key.c_str(), startCastBy - currentTick);
 
 		// for a 3s casting time song, we should recast if it will expire in the next 6 seconds
 		// the constant 3 seconds is we will assume if we don't cast this song now, the next song will probably be a 3
@@ -861,7 +864,59 @@ const SongData scheduleNextSong()
 		if (startCastBy  < currentTick)
 			return *song;
 
-		if (songExpires[song->name] < songExpires[stalestSong->name])
+		if (songExpires[song->key] < songExpires[stalestSong->key])
+			stalestSong = &(*song);
+	}
+
+	// we didn't find a song that had priority to cast, so we'll cast the song that will expirest instead
+	if (stalestSong)
+	{
+		if (DebugMode) WriteChatf("MQ2Medley::scheduleNextSong no priority song found, returning stalest song: %s", stalestSong->name.c_str());
+		return *stalestSong;
+	}
+	else {
+		if (!quiet) WriteChatf("\arMQ2Medley\au::\atFAILED to schedule a song, no songs ready or conditions not met");
+		return nullSong;
+	}
+}
+
+const SongData peekNextSong()
+{
+	__int64 currentTick = GetTime();  // 10th of seconds
+	if (DebugMode) WriteChatf("MQ2Medley::scheduleNextSong - currentTick=%I64d", currentTick);
+	SongData * stalestSong = NULL;
+	for (auto song = medley.begin(); song != medley.end(); song++)
+	{
+		if (!song->isReady()) {
+			DebugSpew("MQ2Medley::scheduleNextSong skipping[%s] (not ready)", song->name.c_str());
+			continue;
+		}
+		if (!song->evalCondition()) {
+			//DebugSpew("MQ2Medley::scheduleNextSong skipping[%s] (condition not met)", song->name.c_str());
+			continue;
+		}
+
+		if (song->once) {
+			SongData nextSong = *song;
+			return nextSong;
+		}
+
+		if (!stalestSong)
+			stalestSong = &(*song);
+
+		// for a 3s casting time song, we should recast if it will expire in the next 6 seconds
+		// the constant 3 seconds is we will assume if we don't cast this song now, the next song will probably be a 3
+		// second cast time song
+		long long startCastBy = songExpires[song->key] - song->castTime - 30;
+		if (DebugMode) WriteChatf("MQ2Medley::scheduleNextSong time till need to cast %s: %I64d 10th sec", song->key.c_str(), startCastBy - currentTick);
+
+		// for a 3s casting time song, we should recast if it will expire in the next 6 seconds
+		// the constant 3 seconds is we will assume if we don't cast this song now, the next song will probably be a 3
+		// second cast time song
+		if (startCastBy  < currentTick)
+			return *song;
+
+		if (songExpires[song->key] < songExpires[stalestSong->key])
 			stalestSong = &(*song);
 	}
 
@@ -938,13 +993,16 @@ PLUGIN_API VOID OnPulse(VOID)
 			{
 				// successful cast
 				if (!currentSong.once)
-					songExpires[currentSong.name] = GetTime() + (__int64)(currentSong.evalDuration() * 10);
+					songExpires[currentSong.key] = GetTime() + (__int64)(currentSong.evalDuration() * 10);
 			}
 			if (!medley.empty())
 			{
+				auto nextSong = peekNextSong();
+				if(currentSong.targetID == nextSong.targetID && nextSong.name == currentSong.name)
+					return;
 				currentSong = scheduleNextSong();
 				if (currentSong.type == 4) return;
-				if (!quiet) WriteChatf("\arMQ2Medley\au::\atScheduled: %s", currentSong.name.c_str());
+				if (!quiet) WriteChatf("\arMQ2Medley\au::\atScheduled: %s", currentSong.key.c_str());
 				if (currentSong.targetExp.length() > 0)
 					currentSong.targetID = currentSong.evalTarget();
 			}
