@@ -75,6 +75,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2CpuLoad", "MQ2CpuLoad\MQ
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2EQBC", "MQ2EQBC\MQ2EQBC.vcxproj", "{50419E27-A11E-446F-A5A7-42356CA86684}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221} = {2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Exchange", "MQ2Exchange\MQ2Exchange.vcxproj", "{00DB9426-C35D-45FF-BF9C-5366B0F372E4}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -82,6 +85,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Exchange", "MQ2Exchange\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2FPS", "MQ2FPS\MQ2FPS.vcxproj", "{B97D7C6A-91A5-4A2F-B9C5-23B553D52373}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221} = {2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Melee", "MQ2Melee\MQ2Melee.vcxproj", "{AEA842C7-378A-43F0-9327-66D739C0CCE3}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -102,6 +108,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2TangBot", "MQ2TangBot\MQ
 	ProjectSection(ProjectDependencies) = postProject
 		{2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221} = {2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Twist", "MQ2Twist\MQ2Twist.vcxproj", "{78D8CEE9-6E4D-47D5-9B9A-41A93C359B09}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -272,6 +280,12 @@ Global
 		{B69792AD-51C6-48D3-8455-C5F92F9BC7CB}.Release|Win32.Build.0 = Release|Win32
 		{B69792AD-51C6-48D3-8455-C5F92F9BC7CB}.xDebug|Win32.ActiveCfg = Debug|Win32
 		{B69792AD-51C6-48D3-8455-C5F92F9BC7CB}.xDebug|Win32.Build.0 = Debug|Win32
+		{78D8CEE9-6E4D-47D5-9B9A-41A93C359B09}.Debug|Win32.ActiveCfg = Debug|Win32
+		{78D8CEE9-6E4D-47D5-9B9A-41A93C359B09}.Debug|Win32.Build.0 = Debug|Win32
+		{78D8CEE9-6E4D-47D5-9B9A-41A93C359B09}.Release|Win32.ActiveCfg = Release|Win32
+		{78D8CEE9-6E4D-47D5-9B9A-41A93C359B09}.Release|Win32.Build.0 = Release|Win32
+		{78D8CEE9-6E4D-47D5-9B9A-41A93C359B09}.xDebug|Win32.ActiveCfg = Debug|Win32
+		{78D8CEE9-6E4D-47D5-9B9A-41A93C359B09}.xDebug|Win32.Build.0 = Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
