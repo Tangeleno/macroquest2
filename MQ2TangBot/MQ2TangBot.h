@@ -4,7 +4,7 @@
 #define ISNUMBER() (IsNumber(Index))
 #define GETNUMBER() (atoi(Index))
 #define GETFIRST() Index
-
+std::vector<std::string> SplitString(const std::string &s, char delim);
 class MQ2TangBotType *pTangBotType = 0;
 class MQ2SpellsType *pSpellsType = 0;
 class MQ2QueueType *pQueueType=0;
@@ -327,6 +327,8 @@ private:
 	float Distance(float x1, float y1, float x2, float y2) const;
 public:
 	bool SetupCamp();
+	bool SetCampRadius(float radius);
+	bool SetCampRadius();
 	MQ2TangBotType();
 	bool OrderGroupByHP();
 	enum TangBotMembers {
@@ -372,6 +374,7 @@ private:
 	static bool IsPotion(_ITEMINFO* itemInfo);
 	void ConfigurePoisonClicky(PSPAWNINFO pSpawn);
 	void ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterClass);
+	void SetAxes(PSPAWNINFO pSpawn,const std::string& spellType,std::unordered_map<int,PSPELL>& axeSpells);
 	void SetSpell(std::string spellType, PSPELL spell, int characterClass);
 	void SetMezSpell(const std::string& spellType, PSPELL spell, int characterClass);
 	static long long GetCastTime(PSPELL spell);
@@ -469,5 +472,6 @@ public:
 
 VOID MQ2LoadSpellsCommand(PSPAWNINFO pChar, PCHAR szLine);
 VOID MQ2SetCampCommand(PSPAWNINFO pChar, PCHAR szLine);
+VOID MQ2SetCampRadiusCommand(PSPAWNINFO pChar, PCHAR szLine);
 VOID MQ2GroupHPCommand(PSPAWNINFO pChar, PCHAR szLine);
 VOID MQ2EchoSpellsCommand(PSPAWNINFO pChar, PCHAR szLine);

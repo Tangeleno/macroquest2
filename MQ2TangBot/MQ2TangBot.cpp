@@ -42,6 +42,7 @@ PLUGIN_API VOID InitializePlugin(VOID)
 	AddMQ2Data("QueueCollection", DataQueueCollection);
 	AddCommand("/loadspells", MQ2LoadSpellsCommand);
 	AddCommand("/setcamp", MQ2SetCampCommand);
+	AddCommand("/setcampradius", MQ2SetCampRadiusCommand);
 	AddCommand("/grouphp", MQ2GroupHPCommand);
 	AddCommand("/echospells", MQ2EchoSpellsCommand);
 }
@@ -58,6 +59,7 @@ PLUGIN_API VOID ShutdownPlugin(VOID)
 	RemoveMQ2Data("QueueCollection");
 	RemoveCommand("/loadspells");
 	RemoveCommand("/setcamp");
+	RemoveCommand("/setcampradius");
 	RemoveCommand("/grouphp");
 	RemoveCommand("/echospells");
 }
@@ -66,6 +68,15 @@ VOID MQ2SetCampCommand(PSPAWNINFO pChar, PCHAR szLine)
 {
 	pTangBotType->SetupCamp();
 	WriteChatf("Camp Set");
+}
+
+VOID MQ2SetCampRadiusCommand(PSPAWNINFO pChar, PCHAR szLine)
+{
+	if(IsNumber(szLine)) {
+		auto radius = atof(szLine);
+		pTangBotType->SetCampRadius(radius);
+		WriteChatf("Radius set to %d",radius);
+	}
 }
 VOID MQ2GroupHPCommand(PSPAWNINFO pChar, PCHAR szLine)
 {
@@ -161,6 +172,18 @@ bool MQ2TangBotType::SetupCamp() {
 	_campX = x / groupCount;
 	_campY = y / groupCount;
 	_campZ = z / groupCount;
+	return SetCampRadius();
+}
+
+bool MQ2TangBotType::SetCampRadius(float radius)
+{
+	_campRadius = radius;
+	return true;
+}
+
+bool MQ2TangBotType::SetCampRadius()
+{
+	const auto pChar = GetCharInfo();
 	//Find the Radius of the camp
 	auto maxDistance = Distance(_campX, _campY, pChar->pSpawn->X, pChar->pSpawn->Y);
 	for (int i = 1; i < 6; ++i)
@@ -174,6 +197,7 @@ bool MQ2TangBotType::SetupCamp() {
 	_campRadius = maxDistance * 1.1f;
 	return true;
 }
+
 
 float MQ2TangBotType::Distance(const float x1, const float y1, const float z1, const float x2, const float y2, const float z2) {
 	const auto x = x1 - x2;
@@ -359,10 +383,16 @@ bool MQ2TangBotType::GETMEMBER() {
 				if (ISNUMBER())
 				{
 					returnValue = true;
-					const auto index = static_cast<unsigned int>(GETNUMBER());
+					auto index = static_cast<unsigned int>(GETNUMBER());
+					index = index-1;
+					
 					if (index >= 0 && index < _orderedGroupMembers.size())
 					{
 						Dest.DWord = _orderedGroupMembers[index].GroupNumber;
+					}
+					else
+					{
+						returnValue = false;
 					}
 				}
 			}
@@ -373,13 +403,13 @@ bool MQ2TangBotType::GETMEMBER() {
 	return returnValue;
 }
 
-
 MQ2SpellsType::MQ2SpellsType() :MQ2Type("Spells") {
 	TypeMethod(FindSpells);
 	_poisonItemId = 0;
 }
 void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterClass) {
 	int combatAbility = 0;
+	std::unordered_map<int,PSPELL> berserkerAxes;
 	while (combatAbility<NUM_COMBAT_ABILITIES && pCombatSkillsSelectWnd->ShouldDisplayThisSkill(combatAbility))
 	{
 		if (PSPELL spell = GetSpellByID(pPCData->GetCombatAbility(combatAbility))) {
@@ -408,6 +438,12 @@ void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterCla
 			case EQCharacterClasses::Berserker:
 				switch (spell->Category)
 				{
+				case SpellCategories::CreateItem:
+				{
+					const long itemId = GetSpellBase(spell, 0);
+					berserkerAxes.insert_or_assign(itemId,spell);
+					break;
+				}
 				case SpellCategories::UtilityDetrimental:
 					if (spell->Subcategory == SpellSubCategories::Snare)
 						spellType = "Snare";
@@ -439,7 +475,78 @@ void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterCla
 		}
 		combatAbility++;
 	}
+	//if we're a berserker we have to assign spell axes as well.
+	if(characterClass==EQCharacterClasses::Berserker)
+	{
+		SetAxes(pSpawn,"Jolt",berserkerAxes);
+		SetAxes(pSpawn,"Snare",berserkerAxes);
+		SetAxes(pSpawn,"StunNuke",berserkerAxes);
+
+		//And of course Volley is different, they have a reagentId[0] of -1 even thought they do have a reagent. Luckily it's the name of the Volley Spell
+		auto iterator = Spells.find("Volley");
+		if (iterator != Spells.end())
+		{
+			PSPELL axeSpell = nullptr;
+			//there's no pretty way to do this...
+			if(_strcmpi(iterator->second->Name,"Rage Volley") == 0)
+			{
+				//Magic number, ID of Rage Axe
+				const auto axeIterator = berserkerAxes.find(69020);
+				if(axeIterator!=berserkerAxes.end())
+				{
+					axeSpell = axeIterator->second;
+				}
+			}
+			else
+			{
+				//Things seem to get better at this point. We can find the axe that is the closest lower level spell to our volley spell
+				const auto volleyLevel = iterator->second->ClassLevel;
+				for (auto axe : berserkerAxes)
+				{
+					if(axe.second->ClassLevel>volleyLevel)
+						continue;
+					if(axeSpell)
+					{
+						if(volleyLevel-axeSpell->ClassLevel > volleyLevel-axe.second->ClassLevel)
+						{
+							axeSpell = axe.second;
+						}
+					}
+					else
+					{
+						axeSpell = axe.second;
+					}
+				}
+			}
+			if(axeSpell)
+			{
+				SetSpell("VolleyAxe",axeSpell,EQCharacterClasses::Berserker);
+			}
+		}	
+	}
 }
+
+void MQ2SpellsType::SetAxes(PSPAWNINFO pSpawn, const std::string& spellType, std::unordered_map<int, PSPELL>& axeSpells)
+{
+	auto iterator = Spells.find(spellType);
+	if (iterator != Spells.end())
+	{
+		if(iterator->second->ReagentCount[0])
+		{
+			//This is needed because otherwise the compiler seems decide  axeSpell!=axeSpells.end() is true for the 'Jolt' spell.. I've no idea what's going on here
+			auto spell = iterator->second;
+			auto reagentId = spell->ReagentID[0];
+			if(reagentId) {
+				const auto axeSpell = axeSpells.find(reagentId);
+				if(axeSpell!=axeSpells.end())
+				{
+					SetSpell(spellType+"Axe",axeSpell->second,EQCharacterClasses::Berserker);
+				}
+			}
+		}
+	}
+}
+
 
 bool MQ2SpellsType::ConfigureSpells() {
 	auto pSpawn = GetCharInfo()->pSpawn;
