@@ -802,7 +802,16 @@ bool MQ2SpellsType::ConfigureSpells() {
 						break;
 					case EQCharacterClasses::Shaman:
 						if (spell->spaindex == 7)
-							spellType = "Puma";
+						{
+							if(spell->TargetType == TargetTypes::Self)
+							{
+								spellType = "SpellProc";
+							}
+							else
+							{
+								spellType = "Puma";
+							}
+						}
 						break;
 					case EQCharacterClasses::Enchanter:
 						if (spell->TargetType == TargetTypes::Self) {
@@ -1323,6 +1332,7 @@ void MQ2SpellsType::SetMezSpell(const std::string& spellType, PSPELL spell, int 
 	}
 	else {
 		PSPAWNINFO pSpawn = GetCharInfo()->pSpawn;
+		
 		//All mez slots are filled, we have to replace the worse one
 		std::unordered_map<std::string, PSPELL>::const_iterator mezSpells[3] = { mez1,mez2,mez3 };
 		int worse = 0;
