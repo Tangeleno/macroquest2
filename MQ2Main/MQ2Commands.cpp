@@ -2983,6 +2983,7 @@ VOID Target(PSPAWNINFO pChar, PCHAR szLine)
 			if (pTarget)
 			{
 				int id = pTarget->Data.SpawnID;
+				lockit lk(ghCachedBuffsLock);
 				if (CachedBuffsMap.find(id) != CachedBuffsMap.end())
 				{
 					pTarget = NULL;
@@ -2998,6 +2999,7 @@ VOID Target(PSPAWNINFO pChar, PCHAR szLine)
 				pTarget = NULL;
 			}
 			WriteChatColor("Cached Buffs for ALL Targets cleared.", USERCOLOR_WHO);
+			lockit lk(ghCachedBuffsLock);
 			CachedBuffsMap.clear();
 			return;
 		}
@@ -4034,6 +4036,84 @@ VOID DoHotbutton(PSPAWNINFO pChar, PCHAR pBuffer)
 	cmdHotbutton(pChar, pBuffer);
 	return;
 }
+
+
+// ***************************************************************************
+// Function:    TaskQuitCmd
+// Description: our '/taskquit' command
+//              Extends the built in /taskquit command with support for solo tasks.
+// Usage:       /taskquit <Name>
+//
+//				Usage:
+//				/taskquit Name of task
+// ***************************************************************************
+void TaskQuitCmd(PSPAWNINFO pChar, PCHAR pBuffer)
+{
+	CHAR szName[MAX_STRING] = { 0 };
+	strcpy_s(szName, pBuffer);
+
+	if (szName[0])
+	{
+		if (CTaskManager* tm = ppTaskManager)
+		{
+			CHAR szOut[MAX_STRING] = { 0 };
+			CTaskEntry* sharedentry = (CTaskEntry*)&tm->SharedTaskEntries[0];
+
+			if (sharedentry && sharedentry->TaskID)
+			{
+				if (!_stricmp(sharedentry->TaskTitle, szName))
+				{
+					if (CListWnd* clist = (CListWnd*)pTaskWnd->GetChildItem("TASK_TaskList"))
+					{
+						CXStr str;
+						for (int i = 0; i < clist->ItemsArray.Count; i++)
+						{
+							clist->GetItemText(&str, i, 2);
+							GetCXStr(str.Ptr, szOut);
+							if (!_stricmp(szName, szOut))
+							{
+								clist->SetCurSel(i);
+								pTaskWnd->ConfirmAbandonTask(sharedentry->TaskID);
+								break;
+							}
+						}
+					}
+					return;
+				}
+			}
+
+			for (int i = 0; i < 29; i++)
+			{
+				if (CTaskEntry* entry = &tm->QuestEntries[i])
+				{
+					if (!_stricmp(entry->TaskTitle, szName))
+					{
+						if (CListWnd* clist = (CListWnd*)pTaskWnd->GetChildItem("TASK_TaskList"))
+						{
+							CXStr str;
+							for (int i = 0; i < clist->ItemsArray.Count; i++)
+							{
+								clist->GetItemText(&str, i, 2);
+								GetCXStr(str.Ptr, szOut);
+								if (!_stricmp(szName, szOut))
+								{
+									clist->SetCurSel(i);
+									pTaskWnd->ConfirmAbandonTask(entry->TaskID);
+									break;
+								}
+							}
+						}
+						return;
+					}
+				}
+			}
+		}
+		return;
+	}
+
+	cmdTaskQuit(pChar, pBuffer);
+}
+
 // /timed
 VOID DoTimedCmd(PSPAWNINFO pChar, PCHAR szLine)
 {
@@ -5282,7 +5362,13 @@ void SetForegroundWindowInternal(HWND hWnd)
 	}
 
 	SetForegroundWindow(hWnd);
-	ShowWindow(hWnd, SW_SHOWNORMAL);
+	if (IsIconic(hWnd))
+	{
+		ShowWindow(hWnd, SW_RESTORE);
+	}
+	else {
+		ShowWindow(hWnd, SW_SHOW);
+	}
 
 	if (GetKeyboardState((LPBYTE)&keyState))
 	{
@@ -5368,5 +5454,92 @@ void RemoveLev(PSPAWNINFO pChar, PCHAR szLine) {
 			}
 		}
 	}
+}
+
+void MQCopyLayoutTemp(PSPAWNINFO pChar, PCHAR szLine)
+{
+	if (pLocalPlayer)
+	{
+		CHAR szCurrIni[MAX_STRING] = { 0 };
+		CHAR szLayoutIni[MAX_STRING] = { 0 };
+		CHAR szChar[MAX_STRING] = { 0 };
+		CHAR szServer[MAX_STRING] = { 0 };
+		CHAR szArg1[MAX_STRING] = { 0 };
+
+		GetArg(szChar, szLine, 1);
+		GetArg(szServer, szLine, 2);
+		if (szChar[0] && szServer[0])
+		{
+			CHAR szRes[MAX_STRING] = { "Windowed" };
+			bool bHot = true;
+			bool bLoad = true;
+			bool bSoc = true;
+			GetArg(szArg1, szLine, 3);
+			if (szArg1[0])
+			{
+				CHAR szTemp[MAX_STRING] = { 0 };
+				int len = strlen(szChar) + strlen(szServer);
+				strcpy_s(szTemp, &szLine[len+1]);
+				_strlwr_s(szTemp);
+				if (strstr(szTemp, " none"))
+				{
+					bHot = false;
+					bLoad = false;
+					bSoc = false;
+				}
+				if (strstr(szTemp, " nohot"))
+				{
+					bHot = false;
+				}
+				if (strstr(szTemp, " noload"))
+				{
+					bLoad = false;
+				}
+				if (strstr(szTemp, " nosoc"))
+				{
+					bSoc = false;
+				}
+				if (char *pDest = strstr(szTemp, " res:"))
+				{
+					strcpy_s(szRes, &pDest[5]);
+					if (pDest = strchr(szRes, ' '))
+					{
+						pDest[0] = '\0';
+					}
+				}
+			}
+			sprintf_s(szLayoutIni, "UI_%s_%s.ini", szChar, szServer);
+			CHAR MQCopyLayoutError[MAX_STRING] = { 0 };
+			CXStr Error = MQCopyLayoutError;
+			bool bRet = CopyLayout(szLayoutIni, szRes, bHot, bLoad, bSoc, Error);
+			if (!bRet)
+			{
+				sprintf_s(MQCopyLayoutError, "%s", (const char*)Error);
+			}
+			else
+			{
+				strcpy_s(MQCopyLayoutError, "Layout Copied Successfully.");
+			}
+			WriteChatfSafe("%s", MQCopyLayoutError);
+		}
+		else {
+			WriteChatf("Usage: /mqcopylayout <charname> <server> opt: res:XxY | nohot | noload | nosoc | none");
+			WriteChatf("Example: \"/mqcopylayout eqmule vox\" This is the default, it will copy everything from the layout including hotbuttons, loadouts and socials from the layout using the windowed resolution.");
+			WriteChatf("Example: \"/mqcopylayout eqmule vox nohot\" Will copy everything from the layout excluding hotbuttons from the layout using the windowed resolution.");
+			WriteChatf("Example: \"/mqcopylayout eqmule vox nohot noload\" Will copy everything from the layout excluding hotbuttons and loadouts from the layout using the windowed resolution.");
+			WriteChatf("Example: \"/mqcopylayout eqmule vox nohot noload nosoc\" Will copy everything from the layout excluding hotbuttons, loadouts and socials from the layout using the windowed resolution.");
+			WriteChatf("Example: \"/mqcopylayout eqmule vox none\" Same as the example above. no hotbuttons, no loadouts,no socials");
+			WriteChatf("Example: \"/mqcopylayout eqmule vox res:1600x900\" will copy the layout from the UI_eqmule_vox.ini for the specific 1600x900 resolution (if that resolution actually exist in the UI ini.");
+		}
+	}
+	RemoveCommand("/tempcopylayout");
+}
+void MQCopyLayout(PSPAWNINFO pChar, PCHAR szLine)
+{
+	//yes this is stupid, but if we don't let it pulse once at least we crash.
+	AddCommand("/tempcopylayout", MQCopyLayoutTemp, 0, 1, 0);
+	CHAR szTemp[MAX_STRING] = { 0 };
+	sprintf_s(szTemp, "/tempcopylayout %s", szLine);
+	HideDoCommand((PSPAWNINFO)pLocalPlayer, szTemp, true);
 }
 #endif

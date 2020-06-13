@@ -301,6 +301,7 @@ namespace MQ2Globals
 	HANDLE ghVariableLock = 0;
 	HANDLE ghMacroBlockLock = 0;
 	HANDLE ghGetClassMemberLock = 0;
+	HANDLE ghCachedBuffsLock = 0;
 
 	/* BENCHMARKS */
 	DWORD bmWriteChatColor = 0;
@@ -504,6 +505,7 @@ namespace MQ2Globals
 	fEQCommand        cmdCast = NULL;
 	fEQCommand        cmdUseItem = NULL;
 	fEQCommand        cmdHotbutton = NULL;
+	fEQCommand        cmdTaskQuit = NULL;	
 	fEQCommand        cmdPet = NULL;
 	fEQCommand        cmdMercSwitch = NULL;
 	fEQCommand        cmdAdvLoot = NULL;
@@ -1667,6 +1669,7 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(__HandleMouseWheel);
 	INITIALIZE_EQGAME_OFFSET(DrawNetStatus);
 	INITIALIZE_EQGAME_OFFSET(Util__FastTime);
+	INITIALIZE_EQGAME_OFFSET(__CopyLayout);
 	INITIALIZE_EQGAME_OFFSET(Expansion_HoT);
 	INITIALIZE_EQGAME_OFFSET(__HelpPath);
 	INITIALIZE_EQGAME_OFFSET(__STMLToText);
@@ -1718,7 +1721,10 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(CFindItemWnd__Update);
 	INITIALIZE_EQGAME_OFFSET(CFindItemWnd__PickupSelectedItem);
 	INITIALIZE_EQGAME_OFFSET(CFindItemWnd__WndNotification);
+#else
+	INITIALIZE_EQGAME_OFFSET(CBankWnd__AutoBank);
 #endif
+
 	INITIALIZE_EQGAME_OFFSET(CBankWnd__WndNotification);
 	INITIALIZE_EQGAME_OFFSET(CBankWnd__GetNumBankSlots);
 	INITIALIZE_EQGAME_OFFSET(CBazaarSearchWnd__HandleBazaarMsg);
@@ -2029,6 +2035,7 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(CTabWnd__GetTabInnerRect);
 	INITIALIZE_EQGAME_OFFSET(CTabWnd__GetTabRect);
 	INITIALIZE_EQGAME_OFFSET(CTabWnd__InsertPage);
+	INITIALIZE_EQGAME_OFFSET(CTabWnd__RemovePage);
 	INITIALIZE_EQGAME_OFFSET(CTabWnd__SetPage);
 	INITIALIZE_EQGAME_OFFSET(CTabWnd__SetPageRect);
 	INITIALIZE_EQGAME_OFFSET(CTabWnd__UpdatePage);
@@ -2144,6 +2151,9 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(EQ_Character__TotalEffect);
 	INITIALIZE_EQGAME_OFFSET(EQ_Character__GetPCSpellAffect);
 	INITIALIZE_EQGAME_OFFSET(EQ_Character__SpellDuration);
+#ifdef EQ_Character__MySpellDuration_x
+	INITIALIZE_EQGAME_OFFSET(EQ_Character__MySpellDuration);
+#endif
 	INITIALIZE_EQGAME_OFFSET(CharacterZoneClient__FindItemByGuid);
 	INITIALIZE_EQGAME_OFFSET(CharacterZoneClient__FindItemByRecord);
 	INITIALIZE_EQGAME_OFFSET(EQ_Character__GetAdjustedSkill);
@@ -2161,6 +2171,10 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(EQGroundItemListManager__Instance);
 	INITIALIZE_EQGAME_OFFSET(EverQuestinfo__IsItemPending);
 	INITIALIZE_EQGAME_OFFSET(CAAWnd__ShowAbility);
+	INITIALIZE_EQGAME_OFFSET(CAAWnd__UpdateSelected);
+	INITIALIZE_EQGAME_OFFSET(CAAWnd__Update);
+	INITIALIZE_EQGAME_OFFSET(CXRect__operator_and);
+	INITIALIZE_EQGAME_OFFSET(CUnSerializeBuffer__GetString);
 	
 	INITIALIZE_EQGAME_OFFSET(ArrayClass__DeleteElement);
 	INITIALIZE_EQGAME_OFFSET(__GameLoop);
@@ -2237,6 +2251,7 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(PlayerZoneClient__LegalPlayerRace);
 #endif
 	INITIALIZE_EQGAME_OFFSET(PlayerClient__GetPcClient);
+	INITIALIZE_EQGAME_OFFSET(PcClient__vftable);
 	INITIALIZE_EQGAME_OFFSET(PcClient__PcClient);
 	
 	INITIALIZE_EQGAME_OFFSET(EQPlayerManager__GetSpawnByID);
@@ -2309,6 +2324,7 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(CTargetWnd__GetBuffCaster);
 	INITIALIZE_EQGAME_OFFSET(CTargetWnd__WndNotification);
 	INITIALIZE_EQGAME_OFFSET(CTaskWnd__UpdateTaskTimers);
+	INITIALIZE_EQGAME_OFFSET(CTaskWnd__ConfirmAbandonTask);
 	INITIALIZE_EQGAME_OFFSET(CTaskManager__GetEntry);
 	INITIALIZE_EQGAME_OFFSET(CTaskManager__GetTaskStatus);
 	INITIALIZE_EQGAME_OFFSET(CTaskManager__GetElementDescription);
@@ -2318,6 +2334,8 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(EqSoundManager__WaveInstancePlay);
 	INITIALIZE_EQGAME_OFFSET(CCombatSkillsSelectWnd__ShouldDisplayThisSkill);
 	INITIALIZE_EQGAME_OFFSET(CTextureAnimation__SetCurCell);
+	INITIALIZE_EQGAME_OFFSET(CTextureAnimation__Draw);
+	INITIALIZE_EQGAME_OFFSET(CTAFrameDraw__Draw);
 	INITIALIZE_EQGAME_OFFSET(CSidlManager__FindAnimation1);
 	//INITIALIZE_EQGAME_OFFSET(ActorClient__GetPosition);
 	//INITIALIZE_EQGAME_OFFSET(ActorClient__GetPosition1);
