@@ -204,6 +204,14 @@ extern DWORD CountFrees;
     __asm{mov eax, [eax]};\
     __asm{jmp eax};\
 }
+#define FUNCTION_AT_VIRTUAL_TABLE_ADDRESS(function,address,virtualoffset) __declspec(naked) function\
+{\
+    __asm{mov edx, virtualoffset};\
+    __asm{mov eax, [address]};\
+    __asm{lea eax, [eax + edx * 4]};\
+    __asm{mov eax, [eax]};\
+    __asm{jmp eax};\
+}
 #endif
 
 #define PreserveRegisters(code) \
@@ -331,7 +339,7 @@ EQLIB_API bool SendWndClick(PCHAR WindowName, PCHAR ScreenID, PCHAR ClickNotific
 EQLIB_API bool SendWndNotification(PCHAR WindowName, PCHAR ScreenID, DWORD Notification, VOID *Data = 0);
 EQLIB_API void AddWindow(char *WindowName, CXWnd **ppWindow);
 EQLIB_API void RemoveWindow(char *WindowName);
-EQLIB_API CXWnd *FindMQ2Window(PCHAR Name);
+EQLIB_API CXWnd *FindMQ2Window(PCHAR WindowName, bool bVisibleOnly = false);
 EQLIB_API CXWnd *GetParentWnd(class CXWnd const * pWnd);
 
 EQLIB_API bool SendComboSelect(PCHAR WindowName, PCHAR ScreenID, DWORD Value);
@@ -494,6 +502,7 @@ EQLIB_API float HeadingDiff(float h1, float h2, float *DiffOut);
 EQLIB_API float FixHeading(float Heading);
 EQLIB_API float get_bearing(float x1, float y1, float x2, float y2);
 EQLIB_API unsigned long GetFastTime(void);
+EQLIB_API bool CopyLayout(const CXStr& currlayout, const CXStr& newlayout, bool bHotbuttons, bool bLoadouts, bool bSocials, CXStr& ErrorOut, bool bForceReload = false);
 EQLIB_API char * __stdcall GetXtargetType(DWORD type);
 EQLIB_API DWORD EQGetTime();
 EQLIB_API CXStr *__cdecl STMLToText(CXStr *Out, CXStr const &In, bool bFlag);
@@ -653,7 +662,7 @@ inline bool ItemHasStat(PCONTENTS pCont, int*num, char(&Buffer)[_Size])
 EQLIB_API PCHAR GetLoginName();
 EQLIB_API FLOAT DistanceToPoint(PSPAWNINFO pSpawn, FLOAT xLoc, FLOAT yLoc);
 EQLIB_API FLOAT Distance3DToPoint(PSPAWNINFO pSpawn, FLOAT xLoc, FLOAT yLoc, FLOAT zLoc);
-EQLIB_API PCHAR ShowSpellSlotInfo(PSPELL pSpell, PCHAR szBuffer, SIZE_T BufferSize);
+EQLIB_API PCHAR ShowSpellSlotInfo(PSPELL pSpell, PCHAR szBuffer, SIZE_T BufferSize, PCHAR LineBreak = "<br>");
 EQLIB_API PCHAR ParseSpellEffect(PSPELL pSpell, int i, PCHAR szBuffer, SIZE_T BufferSize, LONG level = 100);
 
 EQLIB_API LONG GetSpellAttrib(PSPELL pSpell, int index);
@@ -661,6 +670,7 @@ EQLIB_API LONG GetSpellBase(PSPELL pSpell, int index);
 EQLIB_API LONG GetSpellBase2(PSPELL pSpell, int index);
 EQLIB_API LONG GetSpellMax(PSPELL pSpell, int index);
 EQLIB_API LONG GetSpellCalc(PSPELL pSpell, int index);
+EQLIB_API void FIllSlotData(EQ_Affect* pAffect, PSPELL pSpell);
 
 EQLIB_API VOID SlotValueCalculate(PCHAR szBuff, PSPELL pSpell, int i, double mp = 1.0);
 EQLIB_API LONG CalcValue(LONG calc, LONG base, LONG max, LONG tick, LONG minlevel = MAX_PC_LEVEL, LONG level = MAX_PC_LEVEL);
@@ -797,7 +807,7 @@ EQLIB_API BOOL		  CloseContainer(PCONTENTS pItem);
 EQLIB_API int		  GetTargetBuffByCategory(DWORD category, DWORD classmask = 0, int startslot = 0);
 EQLIB_API int		  GetTargetBuffBySubCat(PCHAR subcat, DWORD classmask = 0, int startslot = 0);
 EQLIB_API int		  GetTargetBuffBySPA(int spa, bool bIncrease, int startslot = 0);
-EQLIB_API void        GetCachedBuffs(std::map<int, std::map<int, cTargetBuff>>& CBMap);
+EQLIB_API void        ClearCachedBuffs(int ID);
 EQLIB_API bool		  HasCachedTargetBuffSubCat(const char*subcat, PSPAWNINFO pSpawn, PcTargetBuff pcTargetBuff, DWORD classmask = 0);
 EQLIB_API bool		  HasCachedTargetBuffSPA(int spa, bool bIncrease, PSPAWNINFO pSpawn,PcTargetBuff pcTargetBuff);
 EQLIB_API int		  GetSelfBuffByCategory(DWORD category, DWORD classmask = 0, int startslot = 0);
@@ -838,6 +848,9 @@ std::string ModifyMacroString(const std::string &strOriginal, bool bParseOnce = 
 
 LEGACY_API BOOL Calculate(PCHAR szFormula, DOUBLE& Dest);
 
+// Given a string that contains a number, make the number "pretty" by adding things like
+// comma separators, or decimals.
+EQLIB_API void PrettifyNumber(char* string, size_t bufferSize, int decimals = 0);
 
 #ifndef ISXEQ
 #include "MQ2TopLevelObjects.h"
@@ -926,13 +939,19 @@ LEGACY_API BOOL Calculate(PCHAR szFormula, DOUBLE& Dest);
 //they are dynamiczone/raid/faction related
 //need to investigate further to know for sure -eqmule
 #else
-#define XWN_DIALOGRESPONSELINK  32
-#define XWM_FOCUS               33
-#define XWM_LOSTFOCUS           34
-#define XWM_TEXTENTRY_COMPLETE  40
-#define XWM_RSELITEM_DOWN       46
-#define XWN_OUTPUT_TEXT         48
-#define XWN_COMMANDLINK         49
+#define XWN_DIALOGRESPONSELINK		32
+#define XWM_FOCUS					33
+#define XWM_LOSTFOCUS				34
+#define XWM_TEXTENTRY_COMPLETE		40
+#define XWN_FILESELECTION_COMPLETE	41
+#define XWN_ICONSELECTION_COMPLETE	42
+#define XWN_RELOAD_INI				43
+#define XWN_THUMBTRACK				44
+#define XWN_SELITEM_DOWN			45
+#define XWN_FIRST_USER				46
+#define XWM_RSELITEM_DOWN			47
+#define XWN_OUTPUT_TEXT				48
+#define XWN_COMMANDLINK				49
 #endif
 
 #define XKF_SHIFT               1

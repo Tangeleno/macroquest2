@@ -194,7 +194,7 @@ public:
 		if (gUseTradeOnTarget)
 		{
 			if (uiMessage == XWM_LCLICK)
-	{
+			{
 				if (PCHARINFO2 pChar2 = GetCharInfo2())
 				{
 					if (pTarget && pLocalPlayer
@@ -1472,7 +1472,13 @@ void RemoveAutoBankMenu()
 #endif
 	}
 }
-
+#if defined(ROF2EMU) || defined(UFEMU)
+void Autobank(PSPAWNINFO pChar, PCHAR szLine)
+{
+	//.text:006288E0 public: void __thiscall CBankWnd::AutoBank(bool) proc near
+	pBankWnd->AutoBank();
+}
+#endif
 void InitializeMQ2Windows()
 {
     DebugSpew("Initializing MQ2 Windows");
@@ -1522,6 +1528,10 @@ void InitializeMQ2Windows()
 	AddCommand("/itemnotify", ItemNotify);
 	AddCommand("/itemslots", ListItemSlots);
 	AddCommand("/reloadui", ReloadUI);
+#if defined(ROF2EMU) || defined(UFEMU)
+	//neither of these have an actual /autobank command but they do have the autobank function... so we add it.
+	AddCommand("/autobank", Autobank);
+#endif
 #else
 	pISInterface->AddCommand("EQWindows", ListWindows);
 	pISInterface->AddCommand("EQNotify", WndNotify);
@@ -1587,6 +1597,8 @@ void ShutdownMQ2Windows()
 #if !defined(ROF2EMU) && !defined(UFEMU)
     RemoveDetour(CFindItemWnd__WndNotification);
     RemoveDetour(CFindItemWnd__Update);
+#else
+	RemoveCommand("/autobank");
 #endif
     RemoveDetour(CBankWnd__WndNotification);
 	RemoveAutoBankMenu();
@@ -1810,7 +1822,7 @@ void RemoveXMLFile(const char* filename)
 		std::end(XmlFiles));
 }
 
-CXWnd* FindMQ2Window(PCHAR WindowName)
+CXWnd* FindMQ2Window(PCHAR WindowName, bool bVisibleOnly /*false*/)
 {
 	WindowInfo Info;
 	std::string Name = WindowName;
@@ -1819,8 +1831,18 @@ CXWnd* FindMQ2Window(PCHAR WindowName)
 	// check toplevel windows first
 	if (WindowMap.find(Name) != WindowMap.end())
 	{
-		//found it no need to look further...
-		return WindowMap[Name];
+		if (bVisibleOnly)
+		{
+			if (WindowMap[Name]->IsVisible())
+			{
+				return WindowMap[Name];
+			}
+		}
+		else
+		{
+			//found it no need to look further...
+			return WindowMap[Name];
+		}
 	}
 
 	// didnt find one, is it a container?
@@ -1872,10 +1894,22 @@ CXWnd* FindMQ2Window(PCHAR WindowName)
 	for (auto& N : WindowList)
 	{
 		if (N.second.Name == Name)
-	{
-			namefound = true;
-			Info = N.second;
-			break;
+		{
+			if (bVisibleOnly)
+			{
+				if (N.second.pWnd->IsVisible())
+				{
+					namefound = true;
+					Info = N.second;
+					break;
+				}
+			}
+			else
+			{
+				namefound = true;
+				Info = N.second;
+				break;
+			}
 		}
 	}
 

@@ -1,3 +1,218 @@
+June 10 2020
+- Updated for TEST
+-
+June 09 2020 by Sic
+- Added ToV and Overseer currency
+	Example: /echo ${Me.FroststoneDucat}
+	Example: /echo ${Me.OverseerTetradrachm}
+	Example: /echo ${Me.WarlordsSymbol}
+-
+Jun 06 2020
+- Fixed a crash in CUnSerializeBuffer::GetString (the one where the address ends in 22) -Brainiac
+-
+Jun 03 2020
+- Added ${Me.AbilityTimer[x]} where x is a ability id or the name, it returns a pTimeStampType of the timer left on a Ability
+  Example: /echo ${Me.AbilityTimer[Hide].TimeHMS}
+  returns 0:06 (or whatever it's at)
+-
+May 28 2020
+- Updated MQ2AutoLogin to support rizlona logins.
+-
+May 27 2020
+- Updated for TEST
+- Added a /mqcopylayout command
+  Usage: /mqcopylayout <charname> <server> opt: res:XxY (not specifying a res, will default to "Windowed") | nohot | noload | nosoc | none
+- Example: /mqcopylayout eqmule test
+  Will Copy the layout from UI_eqmule_test.ini setting including hotbuttons loadouts and socials to your UI.
+  Ok, so the default behaviour is to copy everything.
+  Now if you wish to exclude stuff:
+- Example: /mqcopylayout eqmule test nohot
+  Will Copy the layout from UI_eqmule_test.ini setting including loadouts and socials to your UI but NOT hotbuttons.
+- Example: /mqcopylayout eqmule test nohot noload
+  Will Copy the layout from UI_eqmule_test.ini setting including socials to your UI but NOT hotbuttons and NOT loadouts.
+- Example: /mqcopylayout eqmule test nohot noload nosoc
+  Will Copy the layout from UI_eqmule_test.ini setting excluding hotbuttons loadouts and socials to your UI.
+- Example: /mqcopylayout eqmule test none
+  Will Copy the layout from UI_eqmule_test.ini setting excluding hotbuttons loadouts and socials to your UI.
+- Example: /mqcopylayout eqmule test res:1600x900
+  Will Copy the layout from UI_eqmule_test.ini setting including hotbuttons loadouts and socials to your 1600x900 UI (if that resolution actually exist in your UI ini).
+-
+May 21 2020
+- Updated for TEST
+-
+May 21 2020
+- Updated for LIVE
+-
+May 19 2020
+- Updated for LIVE
+-
+May 18 2020
+- Misc updates and fixes for rof2 build
+- 
+May 14 2020
+- Updated for TEST
+- Filled in the CGuild class
+-
+Apr 30 2020
+- Me.Invis now takes an optional index or a name to return invis vs undead and animals
+  Example 1: /echo ${Me.Invis} just return the normal one like before, are u invis of any kind.
+  Example 2: /echo ${Me.Invis[ANY]} or just ${Me.Invis[0]} returns true if you are invis of any kind, same as just doing ${Me.Invis}
+  Example 3: /echo ${Me.Invis[NORMAL]} or just ${Me.Invis[1]} returns true if you are normal invis.
+  Example 4: /echo ${Me.Invis[UNDEAD]} or just ${Me.Invis[2]} returns true if you are invis vs undead
+  Example 5: /echo ${Me.Invis[ANIMAL]} or just ${Me.Invis[3]} returns true if you are invis vs animal
+  Example 6: /echo ${Me.Invis[SOS]} or just ${Me.Invis[4]} returns true IF you are a ROG AND in fact hidden AND have a skill of at least 100 in HIDE AND have the AA for SoS
+-
+Apr 29 2020
+- Added ms to /delay
+  Usage: /delay 1500ms
+  will delay 1.5 seconds...
+-
+Apr 29 2020
+- .CachedBuff now accepts = for exact match and if not specified it will do partial match
+  Example 1: Lets say you have United Surety Rk. II on.
+  /echo ${Target.CachedBuff[United Surety]} will work and return United Surety Rk. II
+  /echo ${Target.CachedBuff[=United Surety]} will return NULL since the buff on you is actually United Surety Rk. II
+- Misc Cleanup of CachedBuffs stuff
+-
+Apr 28 2020
+- Optimized the GetGroupMainAssistTargetID inline.
+- Fixed /foreground to respect maximizzed window pos - bug reported by Kaen01
+- Added .SpellRankCap to the character TLO. It returns an int representing your characters spell rank cap.
+  if it returns:
+  1 = you CAN cast Rk. I spells
+  2 = you CAN cast Rk. II spells
+  3 = you CAN cast Rk. III spells
+- Fixed a crash in ${Zone.blah} when in Guild Halls - bug reported by Shin Noir.
+
+Apr 24 2020
+- Optimized the GetRaidMainAssistTargetID inline.
+-
+Apr 21 2020
+- Updated for TEST
+-
+Apr 15 2020
+- Added back Leader and FellowshipID to FELLOWSHIP struct
+  Plugin authors: If you already made changes, just leave it alone. Or not, up to you.
+  Either way, struct is now backwards compatible.
+-
+Apr 15 2020
+- Updated for LIVE
+- Fixed ${Me.CanMount} for some indoor zones that where not flagged as nomount and added bazaar, nexus to zones where its ok to mount.
+-
+Apr 14 2020
+- Updated the FellowShip struct for TEST
+- Updated the FellowShip struct for LIVE
+-
+Apr 13 2020
+- Updated for TEST
+-
+Apr 09 2020
+- Updated for TEST
+- Fixed the ITEMINFO struct.
+-
+Apr 08 2020
+- Updated for TEST
+- Todo: go over the newcharinfo struct there are 0x104 bytes of stuff left to check.
+-
+Apr 06 2020
+- Added .MyDuration to the Spell TLO. It returns a ticktype of YOUR duration for the spell in question.
+- Caption redrawing has been optimized to use less cpu cycles.
+-
+Apr 02 2020
+- Add bSeeInvis, bSeeSOS and bSeeIVU to SpawnSearch - CTWN
+-
+Apr 01 2020
+- Fixed ZoneFlags
+- Fixed the _ZONELIST struct
+- Added .CanMount to the Character TLO it's a bool it returns true if u can mount in the zone u are in and if it won't collide with an illusion u have on. 
+- Added .ToiletPaper to the Character TLO it returns true if you need to go out and get more.
+-
+Mar 31 2020
+- Fixed all Spell Stack checks. (yes again, hopefully for good this time.)
+-
+Mar 28 2020
+- Fixed all Spell Stack checks.
+- Stacks, WillStack, StacksWith, StacksSpawn
+  StacksTarget and StacksPet
+- Added a lock for CachedBuffsMap access
+- Removed a WriteChatf from Task.Timer
+- Added a function which can be used by plugins to format numbers:
+    EQLIB_API void PrettifyNumber(char* string, size_t bufferSize, int decimals = 0);
+  If the given string is a number, it will add commas and set the desired number of decimals.
+  For integers, leave decimals as 0. For floats, a value of 2 is recommended. Min is 0, max is 9.
+- Added .Prettify to Int, Int64, Float and Double types. 
+    Example: ${Me.MaxHPs.Prettify} => 30,103
+    Example: ${Target.Distance.Prettify} => 1,151.24
+  Prettify takes a number of decimals of precision as a parameter:
+    Example: ${Target.Distance.Prettify[4]} => 1,151.2395
+-
+Mar 26 2020
+- Updated for TEST
+- Added CAAWnd__UpdateSelected_x
+- Added CAAWnd__Update_x
+- Changed ShowSpellSlotInfo so it takes a custom linebreak.
+-
+Mar 25 2020 by ChatWithThisName
+- MQ2ChatWnd: Added ingame toggles for SaveByChar, Autoscroll, NoCharSelect to the /mqchat command
+  Available options are:
+    no parameter, will output what it's currently set to. Example: /mqchat SaveByChar
+    On - Turn on the option. Example: /mqchat autoscroll on
+    Off - Turn off the option. Example: /mqchat NoCharSelect off
+-
+Mar 19 2020
+- Updated for LIVE
+- Added CXRect__operator_and
+- Fixed CTextureFont::DrawWrappedText
+- Added CTextureAnimation::Draw
+- Added CTAFrameDraw::Draw
+- Fixed the CPageWnd class for EMU
+- Added members to the CTAFrameDraw class
+- Made the CTabWnd class a proper CXWnd class and added members to it.
+-
+Mar 19 2020 by brainiac
+- Made a couple additional changes to /taskquit from the update on Mar 16 2020:
+  - fix /taskquit <name> to search solo tasks when a shared task is present.
+  - fix /taskquit <name> to be exact match only
+  - change /taskquit <name> to no longer use quotes.
+-
+Mar 18 2020
+- Updated for LIVE
+-
+Mar 17 2020
+- Updated for TEST
+- Fixed the SListWndCell struct
+-
+Mar 16 2020
+- Extended the /taskquit command. It now takes an optional argument, "Name of Task" so we can use it to remove solo tasks as well. -Feature Cred: drwhomphd
+   /taskquit without any argument works like before, i.e it removes the shared task if there is one.
+- Usage /taskquit "Basic Training"
+-
+Mar 15 2020
+- Fixed a bug with ${Macro.CurSub} it will now correctly return the sub its used in.
+- Fixed a bug where tells you would not be detected in all languages. Thanks Kaen01 for report.
+- 
+Mar 14 2020 by Sic
+- Added ParcelStatus to the character TLO.
+  Usage: /echo ${Me.ParcelStatus}
+-
+Mar 11 2020
+- Updated for LIVE
+- Fixed the Lucy Button on itemdisplay for the internal browser. (you can still right click to launch externally)
+-
+Mar 09 2020
+- Updated for TEST
+- Updated for LIVE
+- Fixed ${Spell[permanent spell here].Stack} so it actually returns true when they DO stack.
+-
+Mar 06 2020
+- Added CTabWnd::RemovePage
+- Fixed CXWnd::DrawColoredRect crash
+-
+Mar 03 2020
+- Updated for TEST
+- Updated for LIVE
+- Added CPageWnd::FlashTab
+-
 Feb 27 2020
 - Updated for TEST
 - Updated for LIVE

@@ -254,10 +254,14 @@ FUNCTION_AT_VIRTUAL_ADDRESS( bool ClientSpellManager::GetSpellAffectEmpty(bool),
 FUNCTION_AT_ADDRESS( CAAWnd::CAAWnd(class CXWnd *),CAAWnd__CAAWnd);
 #endif
 #ifdef CAAWnd__Update_x
-FUNCTION_AT_ADDRESS(void  CAAWnd::Update(void),CAAWnd__Update);
+#if defined(ROF2EMU) || defined(UFEMU)
+FUNCTION_AT_ADDRESS(void CAAWnd::Update(void), CAAWnd__Update);
+#else
+FUNCTION_AT_ADDRESS(void CAAWnd::Update(bool),CAAWnd__Update);
+#endif
 #endif
 #ifdef CAAWnd__UpdateSelected_x
-FUNCTION_AT_ADDRESS(void  CAAWnd::UpdateSelected(void),CAAWnd__UpdateSelected);
+FUNCTION_AT_ADDRESS(void CAAWnd::UpdateSelected(void),CAAWnd__UpdateSelected);
 #endif
 #ifdef CAAWnd__UpdateTimer_x
 FUNCTION_AT_ADDRESS(void  CAAWnd::UpdateTimer(void),CAAWnd__UpdateTimer);
@@ -424,6 +428,9 @@ FUNCTION_AT_ADDRESS(void  CBankWnd::UpdateMoneyDisplay(void),CBankWnd__UpdateMon
 #endif
 #ifdef CBankWnd__GetNumBankSlots_x
 FUNCTION_AT_ADDRESS(int  CBankWnd::GetNumBankSlots(void)const ,CBankWnd__GetNumBankSlots);
+#endif
+#ifdef CBankWnd__AutoBank_x
+FUNCTION_AT_ADDRESS(void CBankWnd::AutoBank(bool bCanCombine),CBankWnd__AutoBank);
 #endif
 #ifdef CXRect__CenterPoint_x
 FUNCTION_AT_ADDRESS(class CXPoint  CXRect::CenterPoint(void)const ,CXRect__CenterPoint);
@@ -2432,7 +2439,8 @@ FUNCTION_AT_ADDRESS(void  MapViewMap::RemoveLabel(struct _mapviewlabel *),MapVie
 FUNCTION_AT_ADDRESS(void  CXRect::Normalize(void),CXRect__Normalize);
 #endif
 #ifdef CXRect__operator_and_x
-FUNCTION_AT_ADDRESS(class CXRect  CXRect::operator&(class CXRect)const ,CXRect__operator_and);
+FUNCTION_AT_ADDRESS(CXRect CXRect::operator &(const CXRect&) const ,CXRect__operator_and);
+//FUNCTION_AT_ADDRESS(class CXRect  CXRect::operator&(class CXRect)const ,CXRect__operator_and);
 #endif
 #ifdef MapViewMap__JoinLinesAtIntersect_x
 FUNCTION_AT_ADDRESS(void  MapViewMap::JoinLinesAtIntersect(bool),MapViewMap__JoinLinesAtIntersect);
@@ -3021,6 +3029,9 @@ FUNCTION_AT_ADDRESS(class CXStr *CTargetWnd::GetBuffCaster(int),CTargetWnd__GetB
 #ifdef CTaskWnd__UpdateTaskTimers_x
 FUNCTION_AT_ADDRESS(int CTaskWnd::UpdateTaskTimers(unsigned long),CTaskWnd__UpdateTaskTimers);
 #endif
+#ifdef CTaskWnd__ConfirmAbandonTask_x
+FUNCTION_AT_ADDRESS(void CTaskWnd::ConfirmAbandonTask(int),CTaskWnd__ConfirmAbandonTask);
+#endif
 #ifdef CTaskManager__GetEntry_x
 FUNCTION_AT_ADDRESS(CTaskEntry *CTaskManager::GetEntry(int Index, int System, bool bCheckEmpty), CTaskManager__GetEntry);
 #endif
@@ -3248,7 +3259,7 @@ FUNCTION_AT_ADDRESS( CGuild::CGuild(void),CGuild__CGuild);
 #endif
 #ifdef CGuild__GetGuildName_x
 #if !defined(ROF2EMU) && !defined(UFEMU)
-FUNCTION_AT_ADDRESS(char * CGuild::GetGuildName(__int64),CGuild__GetGuildName);
+FUNCTION_AT_ADDRESS(char * CGuild::GetGuildName(__int64, ServerGuildName, int, bool),CGuild__GetGuildName);
 #else
 FUNCTION_AT_ADDRESS(char * CGuild::GetGuildName(DWORD), CGuild__GetGuildName);
 #endif
@@ -3382,6 +3393,9 @@ FUNCTION_AT_ADDRESS(VePointer<CONTENTS> CharacterBase::GetItemPossession(const I
 #endif
 #ifdef BaseProfile__GetItemPossession_x
 FUNCTION_AT_ADDRESS(VePointer<CONTENTS> BaseProfile::GetItemPossession(const ItemIndex &lIndex) const,BaseProfile__GetItemPossession);
+#endif
+#ifdef PcClient__vftable_x
+FUNCTION_AT_VIRTUAL_TABLE_ADDRESS(int CharacterBase::GetGameFeature(int index), PcClient__vftable, 0x0);
 #endif
 #ifdef AggroMeterManagerClient__Instance_x
 FUNCTION_AT_ADDRESS(AggroMeterManagerClient &AggroMeterManagerClient::Instance(), AggroMeterManagerClient__Instance);
@@ -4571,6 +4585,7 @@ FUNCTION_AT_ADDRESS(bool CharacterZoneClient::FindItemByGuid(const EqItemGuid& I
 #ifdef CharacterZoneClient__FindItemByRecord_x
 FUNCTION_AT_ADDRESS(BYTE CharacterZoneClient::FindItemByRecord(int ItemNumber /*recordnum*/, int *pos_slot, int *con_slot, bool bReverseLookup),CharacterZoneClient__FindItemByRecord);
 #endif
+FUNCTION_AT_VIRTUAL_ADDRESS(int CharacterZoneClient::CalculateInvisLevel(InvisibleTypes, bool bIncludeSos),0x20);
 #ifdef EQ_Character__FindItemQty_x
 FUNCTION_AT_ADDRESS(unsigned char  EQ_Character::FindItemQty(int,int),EQ_Character__FindItemQty);
 #endif
@@ -4749,7 +4764,10 @@ FUNCTION_AT_ADDRESS(bool EQ_Spell::IsDegeneratingLevelMod(int) ,EQ_Spell__IsDege
 FUNCTION_AT_ADDRESS(void  EQ_Character::EQSPA_Feign_Death(int),EQ_Character__EQSPA_Feign_Death);
 #endif
 #ifdef EQ_Character__SpellDuration_x
-FUNCTION_AT_ADDRESS(int  EQ_Character::SpellDuration(class EQ_Spell const *,unsigned char,unsigned char),EQ_Character__SpellDuration);
+FUNCTION_AT_ADDRESS(int EQ_Character::SpellDuration(class EQ_Spell const *,unsigned char,unsigned char),EQ_Character__SpellDuration);
+#endif
+#ifdef EQ_Character__MySpellDuration_x
+FUNCTION_AT_ADDRESS(int EQ_Character::MySpellDuration(PSPELL pSpell, PCONTENTS *pItemOut, PSPAWNINFO pCaster, int OrgDuration, int *pOut1, int *pOut2),EQ_Character__MySpellDuration);
 #endif
 #ifdef EQ_Character__eqspa_change_form_x
 FUNCTION_AT_ADDRESS(int  EQ_Character::eqspa_change_form(class EQ_Spell *,int,int,class EQ_Affect *),EQ_Character__eqspa_change_form);
@@ -7795,11 +7813,11 @@ FUNCTION_AT_ADDRESS(int  CXWnd::DrawHScrollbar(int,int,int)const ,CXWnd__DrawHSc
 FUNCTION_AT_ADDRESS(void  CXWnd::Refade(void),CXWnd__Refade);
 #endif
 #ifdef CXWnd__Move_x
-#if !defined(ROF2EMU) && !defined(UFEMU)
+//#if !defined(ROF2EMU) && !defined(UFEMU)
 FUNCTION_AT_ADDRESS(int  CXWnd::Move(class CXPoint const &), CXWnd__Move);
-#else
-FUNCTION_AT_ADDRESS(int  CXWnd::Move(class CXPoint),CXWnd__Move);
-#endif
+//#else
+//FUNCTION_AT_ADDRESS(int  CXWnd::Move(class CXPoint),CXWnd__Move);
+//#endif
 #endif
 #ifdef CXWnd__Move1_x
 FUNCTION_AT_ADDRESS(int CXWnd::Move(const CXRect &, bool, bool, bool, bool), CXWnd__Move1);
@@ -7847,7 +7865,7 @@ FUNCTION_AT_ADDRESS(int  CXWnd::DrawChildren(void)const ,CXWnd__DrawChildren);
 FUNCTION_AT_ADDRESS(void  CXWnd::BringChildWndToTop(class CXWnd *),CXWnd__BringChildWndToTop);
 #endif
 #ifdef CXWnd__DrawColoredRect_x
-FUNCTION_AT_ADDRESS(int __cdecl CXWnd::DrawColoredRect(class CXRect,unsigned long,class CXRect),CXWnd__DrawColoredRect);
+FUNCTION_AT_ADDRESS(int __cdecl CXWnd::DrawColoredRect(const CXRect& rc, COLORREF Color, const CXRect& ClipRect),CXWnd__DrawColoredRect);
 #endif
 #ifdef CXWnd__GetTooltipRect_x
 FUNCTION_AT_ADDRESS(class CXRect *__cdecl CXWnd::GetTooltipRect(class CXRect *),CXWnd__GetTooltipRect);
@@ -8650,7 +8668,10 @@ FUNCTION_AT_ADDRESS(class CXRect  CTabWnd::GetPageInnerRect(void)const ,CTabWnd_
 FUNCTION_AT_ADDRESS(void  CTabWnd::SetPage(class CPageWnd *, bool, bool),CTabWnd__SetPage1);
 #endif
 #ifdef CTabWnd__InsertPage_x
-FUNCTION_AT_ADDRESS(void  CTabWnd::InsertPage(class CPageWnd *,int),CTabWnd__InsertPage);
+FUNCTION_AT_ADDRESS(void CTabWnd::InsertPage(CPageWnd *,int),CTabWnd__InsertPage);
+#endif
+#ifdef CTabWnd__RemovePage_x
+FUNCTION_AT_ADDRESS(void CTabWnd::RemovePage(CPageWnd *),CTabWnd__RemovePage);
 #endif
 #ifdef CTabWnd__SetPageRect_x
 FUNCTION_AT_ADDRESS(void  CTabWnd::SetPageRect(class CXRect),CTabWnd__SetPageRect);
@@ -8684,6 +8705,11 @@ FUNCTION_AT_ADDRESS(int  CTabWnd::DrawCurrentPage(void)const ,CTabWnd__DrawCurre
 #endif
 #ifdef CPageWnd__SetTabText_x
 FUNCTION_AT_ADDRESS(void CPageWnd::SetTabText(CXStr &)const,CPageWnd__SetTabText);
+#endif
+#if !defined(ROF2EMU) && !defined(UFEMU)
+#ifdef CPageWnd__FlashTab_x
+FUNCTION_AT_ADDRESS(void CPageWnd::FlashTab(bool, int) const,CPageWnd__FlashTab);
+#endif
 #endif
 #ifdef CWebManager__CreateHtmlWnd_x
 FUNCTION_AT_ADDRESS(CHtmlWnd* CWebManager::CreateHtmlWnd(const char*, const char*, const char*, bool, const char*),CWebManager__CreateHtmlWnd);
@@ -9263,20 +9289,17 @@ FUNCTION_AT_ADDRESS(int  CTextureFont::GetWidth(unsigned short)const ,CTextureFo
 FUNCTION_AT_ADDRESS(int  CTextureFont::GetKerning(unsigned short,unsigned short)const ,CTextureFont__GetKerning);
 #endif
 #ifdef CTextureFont__GetTextExtent_x
-#if !defined(ROF2EMU) && !defined(UFEMU)
-FUNCTION_AT_ADDRESS(int CTextureFont::GetTextExtent(CXStr *),CTextureFont__GetTextExtent);
-#else
-FUNCTION_AT_ADDRESS(int CTextureFont::GetTextExtent(void),CTextureFont__GetTextExtent);
-#endif
+FUNCTION_AT_ADDRESS(int CTextureFont::GetTextExtent(const CXStr& str),CTextureFont__GetTextExtent);
 #endif
 #ifdef CTextureFont__GetHeight_x
-FUNCTION_AT_ADDRESS(int  CTextureFont::GetHeight(void)const ,CTextureFont__GetHeight);
+//FUNCTION_AT_ADDRESS(int CTextureFont::GetHeight(void)const ,CTextureFont__GetHeight);
 #endif
 #ifdef CTextureFont__GetName_x
 FUNCTION_AT_ADDRESS(class CXStr  CTextureFont::GetName(void)const ,CTextureFont__GetName);
 #endif
 #ifdef CTextureFont__DrawWrappedText_x
-FUNCTION_AT_ADDRESS(int  CTextureFont::DrawWrappedText(CXStr *, int, int, int, CXRect *, COLORREF, WORD, int)const ,CTextureFont__DrawWrappedText);
+FUNCTION_AT_ADDRESS(int  CTextureFont::DrawWrappedText(const CXStr&, int, int, int, const CXRect&, COLORREF, WORD, int) const ,CTextureFont__DrawWrappedText);
+//FUNCTION_AT_ADDRESS(int  CTextureFont::DrawWrappedText(CXStr *, int, int, int, CXRect *, COLORREF, WORD, int)const ,CTextureFont__DrawWrappedText);
 #endif
 #ifdef CTextureFont__DrawWrappedText1_x
 FUNCTION_AT_ADDRESS(int  CTextureFont::DrawWrappedText(class CXStr,class CXRect,class CXRect,unsigned long,unsigned short,int)const ,CTextureFont__DrawWrappedText1);
@@ -9318,7 +9341,7 @@ FUNCTION_AT_ADDRESS(void  CTextureAnimation::SetCurFrame(int),CTextureAnimation_
 FUNCTION_AT_ADDRESS(int  CTextureAnimation::GetCurFrame(void)const ,CTextureAnimation__GetCurFrame);
 #endif
 #ifdef CTextureAnimation__Draw_x
-FUNCTION_AT_ADDRESS(int  CTextureAnimation::Draw(class CXRect,class CXRect,unsigned long,unsigned long)const ,CTextureAnimation__Draw);
+FUNCTION_AT_ADDRESS(int CTextureAnimation::Draw(const CXRect&, const CXRect&, COLORREF, COLORREF) const ,CTextureAnimation__Draw);
 #endif
 #ifdef CTextureAnimation__Draw1_x
 FUNCTION_AT_ADDRESS(int  CTextureAnimation::Draw(class CXPoint,class CXRect,unsigned long,unsigned long)const ,CTextureAnimation__Draw1);
@@ -9526,7 +9549,7 @@ FUNCTION_AT_ADDRESS( CTAFrameDraw::CTAFrameDraw(class CXStr),CTAFrameDraw__CTAFr
 FUNCTION_AT_ADDRESS(void  CTAFrameDraw::Set(class CTextureAnimation * * const),CTAFrameDraw__Set);
 #endif
 #ifdef CTAFrameDraw__Draw_x
-FUNCTION_AT_ADDRESS(int  CTAFrameDraw::Draw(class CXRect,class CXRect)const ,CTAFrameDraw__Draw);
+FUNCTION_AT_ADDRESS(int CTAFrameDraw::Draw(const CXRect& Rect, const CXRect& ClipRect) const ,CTAFrameDraw__Draw);
 #endif
 #ifdef CTAFrameDraw__Draw1_x
 FUNCTION_AT_ADDRESS(int  CTAFrameDraw::Draw(class CXRect,class CXRect,int)const ,CTAFrameDraw__Draw1);

@@ -97,7 +97,8 @@ LEGACY_API VOID PopupText                           (PSPAWNINFO,PCHAR);
 LEGACY_API VOID PopupTextCustom                     (PSPAWNINFO,PCHAR);
 LEGACY_API VOID PopupTextEcho                       (PSPAWNINFO,PCHAR);
 LEGACY_API VOID UseItemCmd                          (PSPAWNINFO,PCHAR);
-LEGACY_API VOID DoHotbutton                          (PSPAWNINFO,PCHAR);
+LEGACY_API VOID DoHotbutton                         (PSPAWNINFO,PCHAR);
+LEGACY_API VOID TaskQuitCmd                         (PSPAWNINFO,PCHAR);
 
 LEGACY_API VOID SpellSlotInfo                       (PSPAWNINFO,PCHAR);
 LEGACY_API VOID SetWinTitle							(PSPAWNINFO,PCHAR);
@@ -115,6 +116,7 @@ LEGACY_API VOID MapZoomCmd                          (PSPAWNINFO,PCHAR);
 LEGACY_API VOID ForeGroundCmd                       (PSPAWNINFO,PCHAR);
 LEGACY_API VOID QuitCmd                             (PSPAWNINFO,PCHAR);
 LEGACY_API VOID RemoveLev							(PSPAWNINFO,PCHAR);
+LEGACY_API VOID MQCopyLayout						(PSPAWNINFO,PCHAR);
 LEGACY_API VOID EngineCommand                       (PSPAWNINFO,PCHAR);
 LEGACY_API VOID PluginCmdSort                       (VOID);
 #endif

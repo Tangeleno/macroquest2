@@ -599,7 +599,7 @@ inline int IsFellowshipMember(const char* SpawnName)
 	if (PFELLOWSHIPINFO pFellowship = &pSpawn->Fellowship)
 	{
 
-		for (DWORD i = 0; i < pFellowship->Members; i++)
+		for (int i = 0; i < pFellowship->Members; i++)
 		{
 			if (!_stricmp(SpawnName, pFellowship->FellowshipMember[i].Name))
 				return 1;
@@ -829,6 +829,21 @@ inline LONG EQGetSpellDuration(PSPELL pSpell, unsigned char casterlevel, bool is
 	}
 	return 0;
 }
+inline int EQGetMySpellDuration(PSPELL pSpell, PCONTENTS *pContOut, PSPAWNINFO pCaster, int OrgDuration, int *pOut1, int *pOut2)
+{
+	if (PCHARINFO pCharInfo = GetCharInfo()) {
+#ifdef NEWCHARINFO
+		if (pCharInfo->PcClient_CharacterZoneClient_vfTable) {
+#else
+		if (pCharInfo->vtable2) {
+#endif
+			if (EQ_Character *cb = (EQ_Character *)pCharData1) {
+				return cb->MySpellDuration(pSpell, pContOut, pCaster, OrgDuration, pOut1,pOut2);
+			}
+		}
+	}
+	return 0;
+}
 /*
 need to figure out why this fails in xp and the above doesn't - eqmule
 static inline ULONGLONG GetTickCount64(void)
@@ -862,43 +877,22 @@ static inline LONG GetSpellNumEffects(PSPELL pSpell)
 static inline DWORD GetGroupMainAssistTargetID()
 {
 	if (PCHARINFO pChar = GetCharInfo()) {
-		bool bMainAssist = false;
-		if (PGROUPINFO pGroup = pChar->pGroupInfo) {
-			if (PGROUPMEMBER pMember = pGroup->pMember[0]) {
-				for (int i = 0; i < 6; i++) {
-					if (pGroup->pMember[i]) {
-						if (pGroup->pMember[i]->MainAssist) {
-							bMainAssist = true;
-							break;
-						}
-					}
-				}
-			}
-		}
-		if (bMainAssist && pChar->pSpawn) {
-			return pChar->pSpawn->GroupAssistNPC[0];
+		if (pChar->pGroupInfo && pLocalPlayer) {
+			return ((PSPAWNINFO)pLocalPlayer)->GroupAssistNPC[0];
 		}
 	}
 	return 0;
 }
 static inline DWORD GetRaidMainAssistTargetID(int index)
 {
-	if (PSPAWNINFO pSpawn = (PSPAWNINFO)pLocalPlayer) {
-		if (pRaid) {
-			bool bMainAssist = false;
-			for (int i = 0; i < 72; i++)
-			{
-				if (pRaid->RaidMemberUsed[i] && pRaid->RaidMember[i].RaidMainAssist)
-				{
-					bMainAssist = true;
-					break;
-				}
-			}
-			if (bMainAssist) {
-				if (index < 0 || index > 3)
-					index = 0;
-				return pSpawn->RaidAssistNPC[index];
-			}
+	if (pRaid)
+	{
+		if (PSPAWNINFO pSpawn = (PSPAWNINFO)pLocalPlayer) {
+			if (index < 0)
+				index = 0;
+			if (index > 2)
+				index = 2;
+			return pSpawn->RaidAssistNPC[index];
 		}
 	}
 	return 0;

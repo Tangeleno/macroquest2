@@ -72,6 +72,7 @@ namespace MQ2Globals
 	EQLIB_VAR HANDLE ghCCommandLock;
 	EQLIB_VAR HANDLE ghVariableLock;
 	EQLIB_VAR HANDLE ghGetClassMemberLock;
+	EQLIB_VAR HANDLE ghCachedBuffsLock;
 	
 	EQLIB_VAR BOOL g_Loaded;
 	EQLIB_VAR DWORD ThreadID;
@@ -370,6 +371,7 @@ namespace MQ2Globals
 	EQLIB_VAR fEQCommand			cmdCast;
 	EQLIB_VAR fEQCommand			cmdUseItem;
 	EQLIB_VAR fEQCommand			cmdHotbutton;
+	EQLIB_VAR fEQCommand			cmdTaskQuit;
 	EQLIB_VAR fEQCommand			cmdPet;
 	EQLIB_VAR fEQCommand			cmdMercSwitch;
 	EQLIB_VAR fEQCommand			cmdAdvLoot;
@@ -1113,6 +1115,8 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD Teleport_Table;
 	EQLIB_VAR DWORD Teleport_Table_Size;
 	EQLIB_VAR DWORD Util__FastTime;
+	EQLIB_VAR DWORD __CopyLayout;
+	
 	EQLIB_VAR DWORD wwsCrashReportCheckForUploader;
 	EQLIB_VAR DWORD wwsCrashReportPlatformLaunchUploader;
 	
@@ -1155,6 +1159,8 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD CFindItemWnd__WndNotification;
 	EQLIB_VAR DWORD CFindItemWnd__Update;
 	EQLIB_VAR DWORD CFindItemWnd__PickupSelectedItem;
+	#else
+	EQLIB_VAR DWORD CBankWnd__AutoBank;
 	#endif
 	
 	EQLIB_VAR DWORD CBazaarSearchWnd__HandleBazaarMsg;
@@ -1473,15 +1479,17 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD CTabWnd__GetTabInnerRect;
 	EQLIB_VAR DWORD CTabWnd__GetTabRect;
 	EQLIB_VAR DWORD CTabWnd__InsertPage;
+	EQLIB_VAR DWORD CTabWnd__RemovePage;
 	EQLIB_VAR DWORD CTabWnd__SetPage;
 	EQLIB_VAR DWORD CTabWnd__SetPageRect;
 	EQLIB_VAR DWORD CTabWnd__UpdatePage;
 	EQLIB_VAR DWORD CTabWnd__GetPageFromTabIndex;
 	EQLIB_VAR DWORD CTabWnd__GetCurrentTabIndex;
 	EQLIB_VAR DWORD CPageWnd__GetTabText;
-	
 	EQLIB_VAR DWORD CPageWnd__SetTabText;
-	
+#if !defined(ROF2EMU) && !defined(UFEMU)
+	EQLIB_VAR DWORD CPageWnd__FlashTab;
+#endif
 	EQLIB_VAR DWORD CTargetRing__Cast;
 	EQLIB_VAR DWORD CTargetWnd__RefreshTargetBuffs;
 	EQLIB_VAR DWORD CTargetWnd__HandleBuffRemoveRequest;
@@ -1585,6 +1593,7 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD EQ_Character__TotalEffect;
 	EQLIB_VAR DWORD EQ_Character__GetPCSpellAffect;
 	EQLIB_VAR DWORD EQ_Character__SpellDuration;
+	EQLIB_VAR DWORD EQ_Character__MySpellDuration;
 	EQLIB_VAR DWORD CharacterZoneClient__FindItemByGuid;
 	EQLIB_VAR DWORD CharacterZoneClient__FindItemByRecord;
 	EQLIB_VAR DWORD EQ_Character__GetAdjustedSkill;
@@ -1602,6 +1611,10 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD EQGroundItemListManager__Instance;
 	EQLIB_VAR DWORD EverQuestinfo__IsItemPending;
 	EQLIB_VAR DWORD CAAWnd__ShowAbility;
+	EQLIB_VAR DWORD CAAWnd__UpdateSelected;
+	EQLIB_VAR DWORD CAAWnd__Update;
+	EQLIB_VAR DWORD CXRect__operator_and;
+	EQLIB_VAR DWORD CUnSerializeBuffer__GetString;
 	
 	EQLIB_VAR DWORD ProfileManager__GetCurrentProfile;
 
@@ -1681,6 +1694,7 @@ namespace MQ2Globals
 	
 	
 	EQLIB_VAR DWORD PlayerClient__GetPcClient;
+	EQLIB_VAR DWORD PcClient__vftable;
 	EQLIB_VAR DWORD PcClient__PcClient;
 	
 	EQLIB_VAR DWORD EQPlayerManager__GetSpawnByID;
@@ -1762,6 +1776,7 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD CTargetWnd__GetBuffCaster;
 	EQLIB_VAR DWORD CTargetWnd__WndNotification;
 	EQLIB_VAR DWORD CTaskWnd__UpdateTaskTimers;
+	EQLIB_VAR DWORD CTaskWnd__ConfirmAbandonTask;
 	EQLIB_VAR DWORD CTaskManager__GetEntry;
 	EQLIB_VAR DWORD CTaskManager__GetTaskStatus;
 	EQLIB_VAR DWORD CTaskManager__GetElementDescription;
@@ -1773,6 +1788,8 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD ActorClient__GetPosition;
 	EQLIB_VAR DWORD ActorClient__GetPosition1;
 	EQLIB_VAR DWORD CTextureAnimation__SetCurCell;
+	EQLIB_VAR DWORD CTextureAnimation__Draw;
+	EQLIB_VAR DWORD CTAFrameDraw__Draw; 
 	EQLIB_VAR DWORD CSidlManager__FindAnimation1;
 	EQLIB_VAR DWORD msg_spell_worn_off;
 	EQLIB_VAR DWORD msg_new_text;
