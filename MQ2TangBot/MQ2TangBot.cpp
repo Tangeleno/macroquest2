@@ -1,6 +1,7 @@
 #include "MQ2TangBot.h"
 #include <iterator>
 #include <sstream>
+
 BOOL DataTangBot(PCHAR Index, MQ2TYPEVAR &dest) {
 	dest.DWord = 1;
 	dest.Type = pTangBotType;
@@ -120,7 +121,7 @@ bool MQ2TangBotType::OrderGroupByHP()
 	_lastGroupMembers.clear();
 	for (auto orderedGroupMember : _orderedGroupMembers)
 		_lastGroupMembers.push_back(orderedGroupMember);
-	auto const pChar = GetCharInfo();
+	auto* const pChar = GetCharInfo();
 	_orderedGroupMembers.clear();
 	GroupMemberHPs me{};
 	me.GroupNumber = 0;
@@ -155,7 +156,7 @@ bool MQ2TangBotType::ValidGroupMember(PCHARINFO pChar, int groupIndex) {
 bool MQ2TangBotType::SetupCamp() {
 
 	//There are faster ways (Welzl's Algorithm) but that's too much work, this is a small list of points so n^4 doesn't matter
-	const auto pChar = GetCharInfo();
+	auto* const pChar = GetCharInfo();
 	auto x = pChar->pSpawn->X, y = pChar->pSpawn->Y, z = pChar->pSpawn->Z;
 	auto groupCount = 1;
 	//Find the center of the camp
@@ -183,7 +184,7 @@ bool MQ2TangBotType::SetCampRadius(float radius)
 
 bool MQ2TangBotType::SetCampRadius()
 {
-	const auto pChar = GetCharInfo();
+	auto* const pChar = GetCharInfo();
 	//Find the Radius of the camp
 	auto maxDistance = Distance(_campX, _campY, pChar->pSpawn->X, pChar->pSpawn->Y);
 	for (int i = 1; i < 6; ++i)
@@ -211,7 +212,7 @@ float MQ2TangBotType::Distance(const float x1, const float y1, const float x2, c
 }
 
 int GetXTargetCount() {
-	if (auto xtm = GetCharInfo()->pXTargetMgr)
+	if (auto* xtm = GetCharInfo()->pXTargetMgr)
 	{
 		if (xtm->XTargetSlots.Count)
 		{
@@ -232,7 +233,7 @@ int GetXTargetCount() {
 
 bool MQ2TangBotType::GETMEMBER() {
 	auto returnValue = false;
-	auto pMethod = FindMethod(Member);
+	auto* pMethod = FindMethod(Member);
 	if (pMethod) {
 		switch (static_cast<TangBotMethods>(pMethod->ID))
 		{
@@ -299,7 +300,7 @@ bool MQ2TangBotType::GETMEMBER() {
 				returnValue = false;
 				break;
 			}
-			const auto spawn = reinterpret_cast<PSPAWNINFO>(GetSpawnByID(spawnId));
+			auto* const spawn = reinterpret_cast<PSPAWNINFO>(GetSpawnByID(spawnId));
 			if(!spawn)
 			{
 				returnValue = false;
@@ -323,7 +324,7 @@ bool MQ2TangBotType::GETMEMBER() {
 						if (xTarget.xTargetType && xTarget.XTargetSlotStatus) {
 							if (char* ptr = GetXtargetType(xTarget.xTargetType)) {
 								if (!strcmp(ptr, "Auto Hater")) {
-									if (const auto pSpawn = reinterpret_cast<PSPAWNINFO>(GetSpawnByID(xTarget.SpawnID))) {
+									if (auto* const pSpawn = reinterpret_cast<PSPAWNINFO>(GetSpawnByID(xTarget.SpawnID))) {
 										if (Distance(_campX, _campY, pSpawn->X, pSpawn->Y) <= GetCampRadius(pSpawn) && LineOfSight(GetCharInfo()->pSpawn, pSpawn)) {
 											Dest.Ptr = pSpawn;
 											Dest.Type = pSpawnType;
@@ -500,7 +501,7 @@ void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterCla
 			else
 			{
 				//Things seem to get better at this point. We can find the axe that is the closest lower level spell to our volley spell
-				const auto volleyLevel = iterator->second->ClassLevel;
+				auto* const volleyLevel = iterator->second->ClassLevel;
 				for (auto axe : berserkerAxes)
 				{
 					if(axe.second->ClassLevel>volleyLevel)
@@ -534,7 +535,7 @@ void MQ2SpellsType::SetAxes(PSPAWNINFO pSpawn, const std::string& spellType, std
 		if(iterator->second->ReagentCount[0])
 		{
 			//This is needed because otherwise the compiler seems decide  axeSpell!=axeSpells.end() is true for the 'Jolt' spell.. I've no idea what's going on here
-			auto spell = iterator->second;
+			auto* spell = iterator->second;
 			auto reagentId = spell->ReagentID[0];
 			if(reagentId) {
 				const auto axeSpell = axeSpells.find(reagentId);
@@ -549,18 +550,18 @@ void MQ2SpellsType::SetAxes(PSPAWNINFO pSpawn, const std::string& spellType, std
 
 
 bool MQ2SpellsType::ConfigureSpells() {
-	auto pSpawn = GetCharInfo()->pSpawn;
+	auto* pSpawn = GetCharInfo()->pSpawn;
 	int characterClass = GetCharInfo()->pSpawn->mActorClient.Class;
 	if (!ClassInfo[characterClass].PureCaster) {
 		ConfigureCombatAbilities(pSpawn, characterClass);
 	}
 	if (ClassInfo[characterClass].CanCast) {
-		auto spellBook = GetCharInfo2()->SpellBook;
+		auto* spellBook = GetCharInfo2()->SpellBook;
 		for (auto i = 0; i < NUM_BOOK_SLOTS; ++i)
 		{
 			if (spellBook[i] == -1)
 				continue;
-			auto spell = GetSpellByID(spellBook[i]);
+			auto* spell = GetSpellByID(spellBook[i]);
 			std::string spellType;
 			bool ignoreType = false;
 			switch (spell->Category)
@@ -1137,7 +1138,7 @@ void MQ2SpellsType::EchoSpells()
 	}
 	if(_poisonItemId!=0)
 	{
-		const auto poison = FindItemByID(_poisonItemId);
+		auto* const poison = FindItemByID(_poisonItemId);
 		WriteChatf("\aoPoisonClicky:\ax \a-g%s\ax", poison->Item1->Name);
 	}
 }
@@ -1256,7 +1257,7 @@ void MQ2SpellsType::ConfigurePoisonClicky(PSPAWNINFO pSpawn)
 	PCONTENTS bestPoison = nullptr;
 	PCHARINFO2 pChar2 = GetCharInfo2();
 	if (pChar2 && pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray) {
-		for (auto pItem : pChar2->pInventoryArray->InventoryArray) {
+		for (auto* pItem : pChar2->pInventoryArray->InventoryArray) {
 			if (pItem) {
 				_ITEMINFO* itemInfo = GetItemFromContents(pItem);
 				if (IsPotion(itemInfo) && (itemInfo->Clicky.RequiredLevel <= pSpawn->Level
@@ -1268,7 +1269,7 @@ void MQ2SpellsType::ConfigurePoisonClicky(PSPAWNINFO pSpawn)
 		}
 	}
 	if (pChar2 && pChar2->pInventoryArray) {
-		for (auto pPack : pChar2->pInventoryArray->Inventory.Pack)
+		for (auto* pPack : pChar2->pInventoryArray->Inventory.Pack)
 		{
 			if (pPack)
 			{
@@ -1484,7 +1485,7 @@ MQ2QueueType::MQ2QueueType() :MQ2Type("QueueType")
 bool MQ2QueueType::GetMember(MQ2VARPTR VarPtr, PCHAR Member, PCHAR Index, MQ2TYPEVAR& Dest)
 {
 	bool returnValue = false;
-	auto pMember = FindMember(Member);
+	auto* pMember = FindMember(Member);
 	if (pMember)
 	{
 		auto queue = static_cast<std::queue<int>*>(VarPtr.Ptr);
@@ -1523,7 +1524,7 @@ bool MQ2QueueType::GetMember(MQ2VARPTR VarPtr, PCHAR Member, PCHAR Index, MQ2TYP
 	}
 	else
 	{
-		auto pMethod = FindMethod(Member);
+		auto* pMethod = FindMethod(Member);
 		if (pMethod)
 		{
 			std::queue<int>* queue = static_cast<std::queue<int>*>(VarPtr.Ptr);
@@ -1579,7 +1580,7 @@ QueueCollectionType::QueueCollectionType() :MQ2Type("QueueCollection")
 bool QueueCollectionType::GetMember(MQ2VARPTR VarPtr, PCHAR Member, PCHAR Index, MQ2TYPEVAR& Dest)
 {
 	auto returnValue = false;
-	auto pMethod = FindMethod(Member);
+	auto* pMethod = FindMethod(Member);
 	if (pMethod)
 	{
 		switch (static_cast<QueueCollectionTypeMethods>(pMethod->ID))
@@ -1612,7 +1613,7 @@ bool QueueCollectionType::GetMember(MQ2VARPTR VarPtr, PCHAR Member, PCHAR Index,
 	}
 	else
 	{
-		auto pMember = FindMember(Member);
+		auto* pMember = FindMember(Member);
 		if (pMember)
 		{
 			switch (static_cast<QueueCollectionTypeMembers>(pMember->ID))

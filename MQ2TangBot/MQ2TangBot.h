@@ -403,17 +403,6 @@ public:
 		return false;
 	}
 };
-//class QueueWrapper
-//{
-//public:
-//	MQ2Type * Type;
-//	std::queue<MQ2VARPTR> Queue;
-//	inline QueueWrapper(MQ2Type* type)
-//	{
-//		Type = type;
-//		Queue = {};
-//	}
-//};
 class MQ2QueueType :public MQ2Type
 {
 public:
