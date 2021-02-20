@@ -1276,6 +1276,9 @@ public:
 		FroststoneDucat = 313,
 		WarlordsSymbol = 314,
 		OverseerTetradrachm = 315,
+		CastTimeLeft = 316,
+		WarforgedEmblem = 317,
+		RestlessMark = 318,
 	};
 	enum CharacterMethods
 	{
@@ -1593,6 +1596,9 @@ public:
 		TypeMember(FroststoneDucat);//313
 		TypeMember(WarlordsSymbol);//314
 		TypeMember(OverseerTetradrachm);//315
+		TypeMember(CastTimeLeft);//316
+		TypeMember(RestlessMark);
+		TypeMember(WarforgedEmblem);
 
 		TypeMethod(Stand);
 		TypeMethod(Sit);
@@ -3266,6 +3272,10 @@ public:
 		DoOpen = 9,
 		DoClose = 10,
 		Select = 11,
+		Move = 12,
+		SetBGColor = 13,
+		SetAlpha = 14,
+		SetFadeAlpha = 15,
 	};
 #ifdef ISBOXER_COMPAT
 	MQ2WindowType() :MQ2Type("eqwindow")
@@ -3321,6 +3331,10 @@ public:
 		TypeMethod(DoOpen);
 		TypeMethod(DoClose);
 		TypeMethod(Select);
+		TypeMethod(Move);
+		TypeMethod(SetBGColor);
+		TypeMethod(SetAlpha);
+		TypeMethod(SetFadeAlpha);
 	}
 
 	~MQ2WindowType()
@@ -3457,6 +3471,7 @@ public:
 		IsTLO = 11,
 		IsOuterVariable = 12,
 		CurSub = 13,
+		FindVariable = 14,
 	};
 	enum MacroMethods
 	{
@@ -3478,7 +3493,8 @@ public:
 		TypeMember(IsTLO);
 		TypeMember(IsOuterVariable);
 		TypeMember(CurSub);
-
+		TypeMember(FindVariable);
+		
 		TypeMethod(Undeclared);
 	}
 
@@ -3753,7 +3769,7 @@ public:
 		AddMember(xHWND, "HWND");
 		TypeMember(Foreground);
 		TypeMember(ValidLoc);
-		TypeMember(FloorAtLoc);	
+		TypeMember(FloorAtLoc);
 	}
 
 	~MQ2EverQuestType()
@@ -4831,6 +4847,7 @@ public:
 		Invited = 11,
 		MainAssist = 12,
 		MasterLooter = 13,
+		MarkNPC = 14,
 	};
 	enum RaidMethods
 	{
@@ -4850,6 +4867,7 @@ public:
 		TypeMember(Invited);
 		TypeMember(MainAssist);
 		TypeMember(MasterLooter);
+		TypeMember(MarkNPC);
 	}
 
 	~MQ2RaidType()
@@ -5072,6 +5090,7 @@ public:
 		CampfireZ = 9,
 		CampfireZone = 10,
 		Campfire = 11,
+		Sharing = 12,
 	};
 	MQ2FellowshipType() :MQ2Type("fellowship")
 	{
@@ -5086,6 +5105,7 @@ public:
 		TypeMember(CampfireZ);
 		TypeMember(CampfireZone);
 		TypeMember(Campfire);
+		TypeMember(Sharing);
 	}
 	~MQ2FellowshipType()
 	{
@@ -5123,6 +5143,7 @@ public:
 		Class = 3,
 		LastOn = 4,
 		Name = 5,
+		Sharing = 6,
 	};
 	MQ2FellowshipMemberType() :MQ2Type("fellowshipmember")
 	{
@@ -5131,6 +5152,7 @@ public:
 		TypeMember(Class);
 		TypeMember(LastOn);
 		TypeMember(Name);
+		TypeMember(Sharing);
 	}
 	~MQ2FellowshipMemberType()
 	{

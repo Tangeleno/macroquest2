@@ -1,3 +1,283 @@
+Feb 18 2021
+- Some Label fixes - brainiac/swiftymuse
+-
+Feb 17 2021
+- Updated for LIVE
+-
+Feb 16 2021
+- Updated for TEST
+-
+Jan 30 2021
+- Fixed ${Me.PctExpToAA} ty cwtn for report
+-
+Jan 30 2021
+- Fixed a backwards compatability problem with CPageWnd::GetTabText and CStmlWnd::GetSTMLText for TEST
+  If you already changed your plugins to use STMLText.Ptr instead of just STMLText you can change it back.
+  Sorry for the inconvenience, it was a difficult patch which took several days to fix, 
+  I did not have time to think that change through until I had a good nights sleep.
+-
+Jan 29 2021
+- Updated for TEST ty to sic for helping finding offsets!
+-
+Jan 22 2021
+- Fixed a bug where if you did not have a charm item equipped ${Me.Bandolier[blah].Active} would always return false
+- Changed /doability so it now takes fake ID 1-6 where it previously only took 1-5 because people where confused when fake IDs did not work.
+	I strongly recommend you never use fake ID 1-8, it's incredibly stupid, just use the real name, for example /doability Hide
+	or the REAL ID which in the example of Hide is 29, so /doability 29
+- Made a change to ${Target.CanSplashLand} so it takes floor z into account as well as spawn z, this should fix some corner cases where a splashspell can land
+	even though npc z is under or over the floor. - Feature request: Kaen01
+- Changed ${Bazaar.Item[x].Trader} to return a stringtype
+- Fixed ${Me.Grouped} to correctly return FALSE instead of NULL when not in a group.
+- Made NUM_INV_SLOTS dynamic Use GetCurrentInvSlots() instead.
+-
+Jan 20 2021
+- Updated for LIVE
+-
+Jan 13 2021
+- Updated for TEST
+- The internal webbrowser is on vacation, it will return when it's ready to do so.
+- For now we will just have to open links in an external browser.
+-
+Dec 15 2020
+- Updated for TEST
+- Removed MAX_KEYRINGITEMS it was a guess at best from 2014 before we knew how the arrays where constructed.
+- pBankArray in CHARINFO is now a ItemBaseContainer named BankItems
+- pSharedBankArray in CHARINFO is now a ItemBaseContainer named SharedBankItems
+- pMercEquipment in CHARINFO is now a ItemBaseContainer named MercenaryItems
+- pMountsArray in CHARINFO is now a ItemBaseContainer named MountKeyRingItems
+- pIllusionsArray in CHARINFO is now a ItemBaseContainer named IllusionKeyRingItems
+- pFamiliarArray in CHARINFO is now a ItemBaseContainer named FamiliarKeyRingItems
+- pHeroForgeArray in CHARINFO is now a ItemBaseContainer named HeroForgeKeyRingItems
+-
+Dec 10 2020
+- Fixes to new alt currency - sic
+- Fixes for num expansions - CWTN
+- Fixed charselect save position of chatwindow (probably)
+- Fixed ZONE_COUNT, this should fix misc plugins that rely on it being correct.
+-
+Dec 08 2020
+- Updated for TEST
+- Updated for LIVE
+- Added .Move to the Window TLO Methods
+	Usage: /invoke ${Window[GroupWindow].Move[100,200,300,400]} ([x,y,width,height]) width and height are optional.
+- Added .SetBGColor to the Window TLO Methods
+	Usage: /invoke ${Window[GroupWindow].SetBGColor[0xFF000000]} ([argb])
+- Added .SetAlpha to the Window TLO Methods
+	Usage: /invoke ${Window[GroupWindow].SetAlpha[0xFF]} (0-0xFF)
+- Added .SetFadeAlpha to the Window TLO Methods
+	Usage: /invoke ${Window[GroupWindow].SetFadeAlpha[0xFF]} (0-0xFF)
+-
+Dec 07 2020
+- Updated for BETA
+- Fixed malo/tash detection problems - SwiftyMuse
+-
+Dec 06 2020
+- Updated for BETA
+-
+Dec 05 2020
+- Updated for BETA
+- Chatwindow at charselect now saves it's position independently from in game
+-
+Dec 04 2020
+- Updated for BETA
+-
+Dec 03 2020
+- Updated for BETA
+- Added WarforgedEmblem and RestlessMark Currencies - Sic
+- Added .Sharing to the fellowship tlo it returns true of false if exp sharing is on for the member - Sic
+	Usage: /echo ${Me.Fellowship.Sharing[x]} where x is fellowship member 1-12
+- Added .FindVariable to the Macro TLO it returns a string of the full variable name if it exist - requested by ctaylor22
+	Usage: /echo Macro.FindVariable[=Myvar]} for EXACT variable name
+	Return: Myvar
+	Usage: /echo Macro.FindVariable[Myvar]} for partial variable name
+	Return: Myvar01 (because it's partial and it found one named Myvar01)
+-
+Dec 02 2020
+- Updated for TEST
+- Updated for BETA
+- Added MarkNPC to the raid tlo -CWTN
+-
+Dec 01 2020
+- Updated for BETA
+-
+Nov 30 2020
+- Updated for BETA
+-
+Nov 29 2020
+- Updated for BETA
+-
+Nov 28 2020
+- Updated for BETA
+-
+Nov 27 2020
+- Updated for BETA
+-
+Nov 26 2020
+- Updated for BETA
+-
+Nov 25 2020
+- Updated for BETA
+-
+Nov 24 2020
+- Updated for BETA
+-
+Nov 23 2020
+- Updated for BETA
+-
+Nov 22 2020
+- Updated for BETA
+-
+Nov 21 2020
+- Updated for BETA
+-
+Nov 20 2020
+- Updated for BETA
+-
+Nov 19 2020
+- Updated for BETA
+- All instances of CFacePick has been changed to CPlayerCustomizationWnd
+- Fixed some misc UI offsets
+-
+Nov 18 2020
+- Updated for LIVE
+- Updated for BETA
+- Fixed a bug in mq2targetinfo that would reset the ini if the plugin version changed.
+-
+Nov 17 2020
+- Updated for BETA
+-
+Nov 16 2020
+- Updated for BETA
+-
+Nov 15 2020
+- Updated for BETA
+-
+Nov 14 2020
+- Updated for BETA
+- Updated for TEST
+-
+Nov 10 2020
+- Updated for BETA
+-
+Nov 09 2020
+- Updated for BETA
+-
+Nov 07 2020
+- Updated for BETA
+-
+Nov 06 2020
+- Updated for BETA
+-
+Nov 05 2020
+- Updated for TEST
+- Updated for BETA
+-
+Nov 04 2020
+- Updated for BETA
+-
+Nov 03 2020
+- Updated for BETA
+-
+Oct 31 2020
+- Fixed a few spell and spellmgr bugs, the struct is 1 byte aligned now, as it should be.
+-
+Oct 29 2020
+- Updated for BETA
+-
+Oct 28 2020
+- Updated for BETA
+-
+Oct 25 2020
+- Updated for BETA
+-
+Oct 24 2020
+- Updated for BETA
+-
+Oct 23 2020
+- Updated for BETA
+-
+Oct 22 2020
+- Updated for BETA
+-
+Oct 21 2020
+- Added raid to chat events - Cred Kaen01
+- Updated for LIVE
+- Updated for BETA
+-
+Oct 20 2020
+- Updated for BETA
+-
+Oct 19 2020
+- Updated for BETA
+-
+Oct 14 2020
+- Updated for TEST
+-
+Oct 13 2020
+- Updated for TEST
+- Added a fix for stopping movement in mq2targetinfo by Freezerburn26
+-
+Sep 23 2020
+- Updated for TEST
+-
+Sep 16 2020
+- Updated for LIVE
+-
+Sep 10 2020
+- Fixed a crash on TEST in the tlos that call FindAffectSlot (.Stacks etc) last argument has been removed
+- MQ2Main (drwhomphd) Made sure the other chat events in DataVars follow the same fix that eqmule put in for Tells in order to work on FV or different languages. 
+- MQ2Main (ChatWithThisName) fixed FindItem/FindItemCount, it will no longer report twice as many augments found.
+-
+Sep 09 2020
+- Updated for TEST
+-
+Aug 26 2020
+- Updated for TEST
+-
+Aug 20 2020
+- Updated for LIVE
+- Updated for TEST
+- Fixed the CMerchantWnd class
+- Fixed the findwindow feature
+-
+Aug 19 2020
+- Updated for LIVE
+- Fixed Me.CombatState for TEST
+- Fixed CButtonWnd::SetCheck
+- Added CHotButton::SetCheck
+- Possibly Fixed Target.MyBuff, somone who has a target with more than 55 spells going on it, will have to check.
+-
+Aug 12 2020
+- Updated for TEST
+-
+Aug 10 2020
+- Fixed a bunch of misc stuff mainly cleaning up after new by using delete[] instead of delete.
+- Moved some function buffer allocations to the heap.
+- Added #include_optional by knightly/drwhomphd
+- Fixed CPageWnd::GetTabText() for emu
+- Fixed uninitialized class and struct members here and there.
+-
+July 23 2020 by SwiftyMUSE
+- Updated .ItemLink to include an optional parameter "[CLICKABLE]" to return the clickable item link.
+-
+July 22 2020
+- Updated for TEST
+- Added ${Me.CastTimeLeft} - Kaen01
+  It returns the cast time left as a timestamp of currently casting spell.
+-
+July 15 2020
+- Updated for LIVE
+-
+July 10 2020
+- Fixed a bug in EQClasses.h in the LegalPlayerRace function.
+- Reverted mq2nav offsets to support patterns again. - @redbot
+-
+July 10 2020
+- Updated for TEST
+-
+July 08 2020
+- Updated for TEST
+-
 June 17 2020
 - Updated for LIVE
 - Fixed the PLOOTITEM struct for TEST
@@ -1572,7 +1852,7 @@ Oct 19 2018 by eqmule
 	Usage: (assuming you have a bandoiler saved as "1HB")
 	| check if its active:
 	[code]
-	/if (!${Me.Bandolier[${Bandolier[1HB].Active}) {
+	/if (!${Me.Bandolier[1HB].Active}) {
 		/echo [${Time}] player want us to activate Bandolier: 1HB.
 		/invoke ${Me.Bandolier[1HB].Activate}
 	}

@@ -1126,6 +1126,10 @@ int GetCurrencyIDByName(PCHAR szName)
 		return ALTCURRENCY_WARLORDSSYMBOL;
 	if (!_stricmp(szName, "Overseer Tetradrachm")) // 50 - Overseer
 		return ALTCURRENCY_OVERSEERTETRADRACHM;
+	if (!_stricmp(szName, "Restless Mark")) // COV
+		return ALTCURRENCY_RESTLESSMARK;
+	if (!_stricmp(szName, "Warforged Emblem")) // COV
+		return ALTCURRENCY_WARFORGEDEMBLEM;
 
 	return -1;
 }
@@ -3365,9 +3369,9 @@ PCHAR ParseSpellEffect(PSPELL pSpell, int i, PCHAR szBuffer, SIZE_T BufferSize, 
 	LONG value = CalcValue(calc, (spa == SPA_STACKING_BLOCK) ? max : base, max, 1, minspelllvl, minspelllvl);
 	LONG finish = CalcValue(calc, (spa == SPA_SPELLDAMAGETAKEN) ? base2 : base, max, ticks, minspelllvl, level);
 
-	BOOL usePercent = (spa == SPA_MOVEMENTRATE || spa == SPA_HASTE || spa == SPA_BARDOVERHASTE || spa == SPA_SPELLDAMAGE || spa == SPA_HEALING || spa == SPA_DOUBLEATTACK || spa == SPA_STUNRESIST || spa == SPA_PROCMOD ||
-		spa == SPA_DIVINEREZ || spa == SPA_METABOLISM || spa == SPA_TRIPLEBACKSTAB || spa == SPA_DOTCRIT || spa == SPA_HEALCRIT || spa == SPA_MENDCRIT || spa == SPA_FLURRY || spa == SPA_PETFLURRY ||
-		spa == SPA_SPELLCRITCHANCE || spa == SPA_SHIELDBLOCKCHANCE || spa == SPA_DAMAGECRITMOD || spa == SPA_SPELLDAMAGETAKEN);
+	BOOL usePercent = (spa == SPA_MOVEMENTRATE || spa == SPA_HASTE || spa == SPA_BARDOVERHASTE || spa == SPA_SPELLDAMAGE || spa == SPA_HEALING || spa == SPA_REMOVE_DETRIMENTAL || spa == SPA_DOUBLEATTACK ||
+		spa == SPA_STUNRESIST || spa == SPA_PROCMOD || spa == SPA_DIVINEREZ || spa == SPA_METABOLISM || spa == SPA_TRIPLEBACKSTAB || spa == SPA_DOTCRIT || spa == SPA_HEALCRIT || spa == SPA_MENDCRIT ||
+		spa == SPA_FLURRY || spa == SPA_PETFLURRY || spa == SPA_SPELLCRITCHANCE || spa == SPA_SHIELDBLOCKCHANCE || spa == SPA_DAMAGECRITMOD || spa == SPA_SPELLDAMAGETAKEN);
 	BOOL AEEffect = (targettype == TT_PBAE || targettype == TT_TARGETED_AE || targettype == TT_AE_PC_V2 || targettype == TT_DIRECTIONAL);
 
 	strcat_s(range, CalcValueRange(calc, base, max, ticks, minspelllvl, level, szTemp2,sizeof(szTemp2), usePercent ? szPercent : ""));
@@ -3822,7 +3826,8 @@ PCHAR ParseSpellEffect(PSPELL pSpell, int i, PCHAR szBuffer, SIZE_T BufferSize, 
 		strcat_s(szBuff, FormatPenaltyChance(spelleffectname, value, szTemp2, szPercent, "Penalty"));
 		break;
 	case 154: //Remove Detrimental(c)
-		strcat_s(szBuff, FormatBase(spelleffectname, base, szTemp2));
+		strcat_s(szBuff, FormatPenaltyChance(spelleffectname, base/10, szTemp2, szPercent, "Chance"));
+		//strcat_s(szBuff, FormatBase(spelleffectname, base, szTemp2));
 		break;
 	case 155: //PoP Resurrect
 	case 156: //Illusion: Target
@@ -7479,12 +7484,12 @@ PCONTENTS GetItemContentsBySlotID(DWORD dwSlotID)
 {
 	int InvSlot = -1;
 	int SubSlot = -1;
-	if (dwSlotID >= 0 && dwSlotID<NUM_INV_SLOTS) InvSlot = dwSlotID;
+	if (dwSlotID >= 0 && dwSlotID < (DWORD)GetCurrentInvSlots()) InvSlot = dwSlotID;
 	else if (dwSlotID >= 262 && dwSlotID<342) {
 		InvSlot = BAG_SLOT_START + (dwSlotID - 262) / 10;
 		SubSlot = (dwSlotID - 262) % 10;
 	}
-	if (InvSlot >= 0 && InvSlot<NUM_INV_SLOTS) {
+	if (InvSlot >= 0 && InvSlot<(int)GetCurrentInvSlots()) {
 		if (PCHARINFO2 pChar2 = GetCharInfo2()) {
 			if (pChar2->pInventoryArray) {
 				if (PCONTENTS iSlot = pChar2->pInventoryArray->InventoryArray[InvSlot]) {
@@ -7506,7 +7511,7 @@ PCONTENTS GetItemContentsByName(CHAR *ItemName)
 {
 	if (PCHARINFO2 pChar2 = GetCharInfo2()) {
 		if (pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray) {
-			for (unsigned long nSlot = 0; nSlot < NUM_INV_SLOTS; nSlot++) {
+			for (int nSlot = 0; nSlot < GetCurrentInvSlots(); nSlot++) {
 				if (PCONTENTS pItem = pChar2->pInventoryArray->InventoryArray[nSlot]) {
 					if (!_stricmp(ItemName, GetItemFromContents(pItem)->Name)) {
 						return pItem;
@@ -8183,7 +8188,7 @@ PCONTENTS FindItemBySlot(short InvSlot, short BagSlot, ItemContainerInstance loc
 	if (location == eItemContainerPossessions) {
 		//check regular inventory
 		if (pChar2 && pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray) {
-			for (unsigned long nSlot = 0; nSlot < NUM_INV_SLOTS; nSlot++) {
+			for (int nSlot = 0; nSlot < GetCurrentInvSlots(); nSlot++) {
 				if (PCONTENTS pItem = pChar2->pInventoryArray->InventoryArray[nSlot]) {
 					if (pItem->GetGlobalIndex().Index.Slot1 == InvSlot && pItem->GetGlobalIndex().Index.Slot2 == BagSlot) {
 							return pItem;
@@ -8211,15 +8216,9 @@ PCONTENTS FindItemBySlot(short InvSlot, short BagSlot, ItemContainerInstance loc
 	else if (location == eItemContainerBank) {
 		//check bank
 		PCHARINFO pChar = GetCharInfo();
-#ifdef NEWCHARINFO
 		if (pChar) {
 			for (unsigned long nSlot = 0; nSlot < pChar->BankItems.Items.Size; nSlot++) {
 				if (PCONTENTS pItem = pChar->BankItems.Items[nSlot].pObject) {
-#else
-		if (pChar && pChar->pBankArray && pChar->pBankArray->Bank) {
-			for (unsigned long nSlot = 0; nSlot < NUM_BANK_SLOTS; nSlot++) {
-				if (PCONTENTS pItem = pChar->pBankArray->Bank[nSlot]) {
-#endif
 					if (pItem->GetGlobalIndex().Index.Slot1 == InvSlot && pItem->GetGlobalIndex().Index.Slot2 == BagSlot) {
 						return pItem;
 					}
@@ -8227,15 +8226,9 @@ PCONTENTS FindItemBySlot(short InvSlot, short BagSlot, ItemContainerInstance loc
 			}
 		}
 		//not found? ok check inside bank bags
-#ifdef NEWCHARINFO
 		if (pChar) {
 			for (unsigned long nPack = 0; nPack < pChar->BankItems.Items.Size; nPack++) {
 				if (PCONTENTS pPack = pChar->BankItems.Items[nPack].pObject) {
-#else
-		if (pChar && pChar->pBankArray && pChar->pBankArray->Bank) {
-			for (unsigned long nPack = 0; nPack < NUM_BANK_SLOTS; nPack++) {
-				if (PCONTENTS pPack = pChar->pBankArray->Bank[nPack]) {
-#endif
 					if (GetItemFromContents(pPack)->Type == ITEMTYPE_PACK && pPack->Contents.ContainedItems.pItems) {
 						for (unsigned long nItem = 0; nItem < GetItemFromContents(pPack)->Slots; nItem++) {
 							if (PCONTENTS pItem = pPack->GetContent(nItem)) {
@@ -8252,15 +8245,9 @@ PCONTENTS FindItemBySlot(short InvSlot, short BagSlot, ItemContainerInstance loc
 	else if (location == eItemContainerSharedBank) {
 		PCHARINFO pChar = GetCharInfo();
 		//what? still not found? ok fine, check shared bank
-#ifdef NEWCHARINFO
 		if (pChar) {
 			for (unsigned long nSlot = 0; nSlot < pChar->SharedBankItems.Items.Size; nSlot++) {
 				if (PCONTENTS pItem = pChar->SharedBankItems.Items[nSlot].pObject) {
-#else
-		if (pChar && pChar->pSharedBankArray && pChar->pSharedBankArray->SharedBank) {
-			for (unsigned long nSlot = 0; nSlot < NUM_SHAREDBANK_SLOTS; nSlot++) {
-				if (PCONTENTS pItem = pChar->pSharedBankArray->SharedBank[nSlot]) {
-#endif
 					if (pItem->GetGlobalIndex().Index.Slot1 == InvSlot && pItem->GetGlobalIndex().Index.Slot2 == BagSlot) {
 						return pItem;
 					}
@@ -8268,15 +8255,9 @@ PCONTENTS FindItemBySlot(short InvSlot, short BagSlot, ItemContainerInstance loc
 			}
 		}
 		//not found? ok check inside sharedbank bags
-#ifdef NEWCHARINFO
 		if (pChar) {
 			for (unsigned long nPack = 0; nPack < pChar->SharedBankItems.Items.Size; nPack++) {
 				if (PCONTENTS pPack = pChar->SharedBankItems.Items[nPack].pObject) {
-#else
-		if (pChar && pChar->pSharedBankArray && pChar->pSharedBankArray->SharedBank) {
-			for (unsigned long nPack = 0; nPack < NUM_SHAREDBANK_SLOTS; nPack++) {
-				if (PCONTENTS pPack = pChar->pSharedBankArray->SharedBank[nPack]) {
-#endif
 					if (GetItemFromContents(pPack)->Type == ITEMTYPE_PACK && pPack->Contents.ContainedItems.pItems) {
 						for (unsigned long nItem = 0; nItem < GetItemFromContents(pPack)->Slots; nItem++) {
 							if (PCONTENTS pItem = pPack->GetContent(nItem)) {
@@ -8378,12 +8359,11 @@ PCONTENTS FindItemByName(PCHAR pName, BOOL bExact)
 				}
 			}
 		}
-
 	}
 
 	//check toplevel slots
 	if (pChar2 && pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray) {
-		for (unsigned long nSlot = 0; nSlot < NUM_INV_SLOTS; nSlot++) {
+		for (int nSlot = 0; nSlot < GetCurrentInvSlots(); nSlot++) {
 			if (PCONTENTS pItem = pChar2->pInventoryArray->InventoryArray[nSlot]) {
 				if (bExact) {
 					if (PITEMINFO pItemi = GetItemFromContents(pItem))
@@ -8401,7 +8381,7 @@ PCONTENTS FindItemByName(PCHAR pName, BOOL bExact)
 					}
 				}
 				// Check for augs next
-				if (pItem->Contents.ContainedItems.pItems && pItem->Contents.ContainedItems.Size) {
+				if (pItem->Contents.ContainedItems.pItems && pItem->Contents.ContainedItems.Size && GetItemFromContents(pItem)->Type != ITEMTYPE_PACK) {
 					for (unsigned long nAug = 0; nAug < pItem->Contents.ContainedItems.Size; nAug++) {
 						if (PCONTENTS pAugItem = pItem->Contents.ContainedItems.pItems->Item[nAug]) {
 							if (GetItemFromContents(pAugItem)->Type == ITEMTYPE_NORMAL && GetItemFromContents(pAugItem)->AugType) {
@@ -8475,15 +8455,9 @@ PCONTENTS FindItemByName(PCHAR pName, BOOL bExact)
 #if !defined(ROF2EMU) && !defined(UFEMU)
 	//still not found? fine... check mount keyring
 	PCHARINFO pChar = GetCharInfo();
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->MountKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->MountKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pMountsArray && pChar->pMountsArray->Mounts) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pMountsArray->Mounts[nSlot]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pItem)->Name)) {
 						return pItem;
@@ -8501,15 +8475,9 @@ PCONTENTS FindItemByName(PCHAR pName, BOOL bExact)
 	}
 
 	//still not found? fine... check illusions keyring
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->IllusionKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->IllusionKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pIllusionsArray && pChar->pIllusionsArray->Illusions) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pIllusionsArray->Illusions[nSlot]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pItem)->Name)) {
 						return pItem;
@@ -8527,15 +8495,9 @@ PCONTENTS FindItemByName(PCHAR pName, BOOL bExact)
 	}
 
 	//still not found? fine... check familiars keyring
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->FamiliarKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->FamiliarKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pFamiliarArray && pChar->pFamiliarArray->Familiars) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pFamiliarArray->Familiars[nSlot]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pItem)->Name)) {
 						return pItem;
@@ -8600,13 +8562,13 @@ PCONTENTS FindItemByID(int ItemID)
 
 	//check toplevel slots
 	if (pChar2 && pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray) {
-		for (unsigned long nSlot = 0; nSlot < NUM_INV_SLOTS; nSlot++) {
+		for (int nSlot = 0; nSlot < GetCurrentInvSlots(); nSlot++) {
 			if (PCONTENTS pItem = pChar2->pInventoryArray->InventoryArray[nSlot]) {
 				if (ItemID == GetItemFromContents(pItem)->ItemNumber) {
 					return pItem;
 				}
 				// Check for augs next
-				if (pItem->Contents.ContainedItems.pItems && pItem->Contents.ContainedItems.Size) {
+				if (pItem->Contents.ContainedItems.pItems && pItem->Contents.ContainedItems.Size && GetItemFromContents(pItem)->Type != ITEMTYPE_PACK) {
 					for (unsigned long nAug = 0; nAug < pItem->Contents.ContainedItems.Size; nAug++) {
 						if (PCONTENTS pAugItem = pItem->Contents.ContainedItems.pItems->Item[nAug]) {
 							if (GetItemFromContents(pAugItem)->Type == ITEMTYPE_NORMAL && GetItemFromContents(pAugItem)->AugType && ItemID == GetItemFromContents(pAugItem)->ItemNumber) {
@@ -8649,15 +8611,9 @@ PCONTENTS FindItemByID(int ItemID)
 #if !defined(ROF2EMU) && !defined(UFEMU)
 	PCHARINFO pChar = GetCharInfo();
 	//still not found? fine... check mount keyring
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->MountKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->MountKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pMountsArray && pChar->pMountsArray->Mounts) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pMountsArray->Mounts[nSlot]) {
-#endif
 				if (ItemID == GetItemFromContents(pItem)->ItemNumber) {
 					return pItem;
 				}
@@ -8666,15 +8622,9 @@ PCONTENTS FindItemByID(int ItemID)
 	}
 
 	//still not found? fine... check illusions keyring
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->IllusionKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->IllusionKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pIllusionsArray && pChar->pIllusionsArray->Illusions) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pIllusionsArray->Illusions[nSlot]) {
-#endif
 				if (ItemID == GetItemFromContents(pItem)->ItemNumber) {
 					return pItem;
 				}
@@ -8683,15 +8633,9 @@ PCONTENTS FindItemByID(int ItemID)
 	}
 
 	//still not found? fine... check familiars keyring
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->FamiliarKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->FamiliarKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pFamiliarArray && pChar->pFamiliarArray->Familiars) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pFamiliarArray->Familiars[nSlot]) {
-#endif
 				if (ItemID == GetItemFromContents(pItem)->ItemNumber) {
 					return pItem;
 				}
@@ -8813,7 +8757,7 @@ DWORD FindItemCountByName(PCHAR pName, BOOL bExact)
 
 	//check toplevel slots
 	if (pChar2 && pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray) {
-		for (unsigned long nSlot = 0; nSlot < NUM_INV_SLOTS; nSlot++) {
+		for (int nSlot = 0; nSlot < GetCurrentInvSlots(); nSlot++) {
 			if (PCONTENTS pItem = pChar2->pInventoryArray->InventoryArray[nSlot]) {
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pItem)->Name)) {
@@ -8838,7 +8782,7 @@ DWORD FindItemCountByName(PCHAR pName, BOOL bExact)
 					}
 				}
 				// Check for augs next
-				if (pItem->Contents.ContainedItems.pItems && pItem->Contents.ContainedItems.Size) {
+				if (pItem->Contents.ContainedItems.pItems && pItem->Contents.ContainedItems.Size && GetItemFromContents(pItem)->Type != ITEMTYPE_PACK) {
 					for (unsigned long nAug = 0; nAug < pItem->Contents.ContainedItems.Size; nAug++) {
 						if (PCONTENTS pAugItem = pItem->Contents.ContainedItems.pItems->Item[nAug]) {
 							if (GetItemFromContents(pAugItem)->Type == ITEMTYPE_NORMAL && GetItemFromContents(pAugItem)->AugType) {
@@ -8922,15 +8866,9 @@ DWORD FindItemCountByName(PCHAR pName, BOOL bExact)
 #if !defined(ROF2EMU) && !defined(UFEMU)
 	//still not found? fine... check mount keyring
 	PCHARINFO pChar = GetCharInfo();
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->MountKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->MountKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pMountsArray && pChar->pMountsArray->Mounts) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pMountsArray->Mounts[nSlot]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pItem)->Name)) {
 						if ((GetItemFromContents(pItem)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pItem)->IsStackable() != 1)) {
@@ -8958,15 +8896,9 @@ DWORD FindItemCountByName(PCHAR pName, BOOL bExact)
 	}
 
 	//still not found? fine... check illusions keyring
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->IllusionKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->IllusionKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pIllusionsArray && pChar->pIllusionsArray->Illusions) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pIllusionsArray->Illusions[nSlot]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pItem)->Name)) {
 						if ((GetItemFromContents(pItem)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pItem)->IsStackable() != 1)) {
@@ -8994,15 +8926,9 @@ DWORD FindItemCountByName(PCHAR pName, BOOL bExact)
 	}
 
 	//still not found? fine... check familiars keyring
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->FamiliarKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->FamiliarKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pFamiliarArray && pChar->pFamiliarArray->Familiars) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pFamiliarArray->Familiars[nSlot]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pItem)->Name)) {
 						if ((GetItemFromContents(pItem)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pItem)->IsStackable() != 1)) {
@@ -9096,7 +9022,7 @@ DWORD FindItemCountByID(int ItemID)
 
 	//check toplevel slots
 	if (pChar2 && pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray) {
-		for (unsigned long nSlot = 0; nSlot < NUM_INV_SLOTS; nSlot++) {
+		for (int nSlot = 0; nSlot < GetCurrentInvSlots(); nSlot++) {
 			if (PCONTENTS pItem = pChar2->pInventoryArray->InventoryArray[nSlot]) {
 				if (ItemID == pItem->ID) {
 					if ((GetItemFromContents(pItem)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pItem)->IsStackable() != 1)) {
@@ -9159,15 +9085,9 @@ DWORD FindItemCountByID(int ItemID)
 #if !defined(ROF2EMU) && !defined(UFEMU)
 	//still not found? fine... check mount keyring
 	PCHARINFO pChar = GetCharInfo();
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->MountKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->MountKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pMountsArray && pChar->pMountsArray->Mounts) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pMountsArray->Mounts[nSlot]) {
-#endif
 				if (ItemID == pItem->ID) {
 					if ((GetItemFromContents(pItem)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pItem)->IsStackable() != 1)) {
 						Count++;
@@ -9181,15 +9101,9 @@ DWORD FindItemCountByID(int ItemID)
 	}
 
 	//still not found? fine... check illusions keyring
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->IllusionKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->IllusionKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pIllusionsArray && pChar->pIllusionsArray->Illusions) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pIllusionsArray->Illusions[nSlot]) {
-#endif
 				if (ItemID == pItem->ID) {
 					if ((GetItemFromContents(pItem)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pItem)->IsStackable() != 1)) {
 						Count++;
@@ -9203,15 +9117,9 @@ DWORD FindItemCountByID(int ItemID)
 	}
 
 	//still not found? fine... check familiars keyring
-#ifdef NEWCHARINFO
 	if (pChar) {
 		for (unsigned long nSlot = 0; nSlot < pChar->FamiliarKeyRingItems.Items.Size; nSlot++) {
 			if (PCONTENTS pItem = pChar->FamiliarKeyRingItems.Items[nSlot].pObject) {
-#else
-	if (pChar && pChar->pFamiliarArray && pChar->pFamiliarArray->Familiars) {
-		for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++) {
-			if (PCONTENTS pItem = pChar->pFamiliarArray->Familiars[nSlot]) {
-#endif
 				if (ItemID == pItem->ID) {
 					if ((GetItemFromContents(pItem)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pItem)->IsStackable() != 1)) {
 						Count++;
@@ -9235,15 +9143,9 @@ PCONTENTS FindBankItemByName(char *pName,BOOL bExact)
 	PCHARINFO pCharInfo = GetCharInfo();
 
 	// Check bank slots
-#ifdef NEWCHARINFO
 	if (pCharInfo) {
 		for (unsigned long nPack = 0; nPack < pCharInfo->BankItems.Items.Size; nPack++) {
 			if (PCONTENTS pPack = pCharInfo->BankItems.Items[nPack].pObject) {
-#else
-	if (pCharInfo && pCharInfo->pBankArray && pCharInfo->pBankArray->Bank) {
-		for (unsigned long nPack = 0; nPack < NUM_BANK_SLOTS; nPack++) {
-			if (PCONTENTS pPack = pCharInfo->pBankArray->Bank[nPack]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pPack)->Name)) {
 						return pPack;
@@ -9322,15 +9224,9 @@ PCONTENTS FindBankItemByName(char *pName,BOOL bExact)
 	}
 
 	// Check shared bank slots
-#ifdef NEWCHARINFO
 	if (pCharInfo) {
 		for (unsigned long nPack = 0; nPack < pCharInfo->SharedBankItems.Items.Size; nPack++) {
 			if (PCONTENTS pPack = pCharInfo->SharedBankItems.Items[nPack].pObject) {
-#else
-	if (pCharInfo->pSharedBankArray) {
-		for (unsigned long nPack = 0; nPack < NUM_SHAREDBANK_SLOTS; nPack++) 		{
-			if (PCONTENTS pPack = pCharInfo->pSharedBankArray->SharedBank[nPack]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pPack)->Name)) {
 						return pPack;
@@ -9414,15 +9310,9 @@ PCONTENTS FindBankItemByID(int ItemID)
 	PCHARINFO pCharInfo = GetCharInfo();
 
 	// Check bank slots
-#ifdef NEWCHARINFO
 	if (pCharInfo) {
 		for (unsigned long nPack = 0; nPack < pCharInfo->BankItems.Items.Size; nPack++) {
 			if (PCONTENTS pPack = pCharInfo->BankItems.Items[nPack].pObject) {
-#else
-	if (pCharInfo && pCharInfo->pBankArray && pCharInfo->pBankArray->Bank) {
-		for (unsigned long nPack = 0; nPack < NUM_BANK_SLOTS; nPack++) {
-			if (PCONTENTS pPack = pCharInfo->pBankArray->Bank[nPack]) {
-#endif
 				if (ItemID == GetItemFromContents(pPack)->ItemNumber) {
 					return pPack;
 				}
@@ -9465,15 +9355,9 @@ PCONTENTS FindBankItemByID(int ItemID)
 	}
 
 	// Check shared bank slots
-#ifdef NEWCHARINFO
 	if (pCharInfo) {
 		for (unsigned long nPack = 0; nPack < pCharInfo->SharedBankItems.Items.Size; nPack++) {
 			if (PCONTENTS pPack = pCharInfo->SharedBankItems.Items[nPack].pObject) {
-#else
-	if (pCharInfo->pSharedBankArray) {
-		for (unsigned long nPack = 0; nPack < NUM_SHAREDBANK_SLOTS; nPack++) {
-			if (PCONTENTS pPack = pCharInfo->pSharedBankArray->SharedBank[nPack]) {
-#endif
 				if (ItemID == GetItemFromContents(pPack)->ItemNumber) {
 					return pPack;
 				}
@@ -9526,15 +9410,9 @@ DWORD FindBankItemCountByName(char *pName, BOOL bExact)
 	PCHARINFO pCharInfo = GetCharInfo();
 
 	// Check bank slots
-#ifdef NEWCHARINFO
 	if (pCharInfo) {
 		for (unsigned long nPack = 0; nPack < pCharInfo->BankItems.Items.Size; nPack++) {
 			if (PCONTENTS pPack = pCharInfo->BankItems.Items[nPack].pObject) {
-#else
-	if (pCharInfo && pCharInfo->pBankArray && pCharInfo->pBankArray->Bank) {
-		for (unsigned long nPack = 0; nPack < NUM_BANK_SLOTS; nPack++) {
-			if (PCONTENTS pPack = pCharInfo->pBankArray->Bank[nPack]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pPack)->Name)) {
 						if ((GetItemFromContents(pPack)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pPack)->IsStackable() != 1)) {
@@ -9633,15 +9511,9 @@ DWORD FindBankItemCountByName(char *pName, BOOL bExact)
 	}
 
 	// Check shared bank slots
-#ifdef NEWCHARINFO
 	if (pCharInfo) {
 		for (unsigned long nPack = 0; nPack < pCharInfo->SharedBankItems.Items.Size; nPack++) {
 			if (PCONTENTS pPack = pCharInfo->SharedBankItems.Items[nPack].pObject) {
-#else
-	if (pCharInfo->pSharedBankArray) {
-		for (unsigned long nPack = 0; nPack < NUM_SHAREDBANK_SLOTS; nPack++) {
-			if (PCONTENTS pPack = pCharInfo->pSharedBankArray->SharedBank[nPack]) {
-#endif
 				if (bExact) {
 					if (!_stricmp(Name, GetItemFromContents(pPack)->Name)) {
 						if ((GetItemFromContents(pPack)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pPack)->IsStackable() != 1)) {
@@ -9748,15 +9620,9 @@ DWORD FindBankItemCountByID(int ItemID)
 	PCHARINFO pCharInfo = GetCharInfo();
 
 	// Check bank slots
-#ifdef NEWCHARINFO
 	if (pCharInfo) {
 		for (unsigned long nPack = 0; nPack < pCharInfo->BankItems.Items.Size; nPack++) {
 			if (PCONTENTS pPack = pCharInfo->BankItems.Items[nPack].pObject) {
-#else
-	if (pCharInfo && pCharInfo->pBankArray && pCharInfo->pBankArray->Bank) {
-		for (unsigned long nPack = 0; nPack < NUM_BANK_SLOTS; nPack++) {
-			if (PCONTENTS pPack = pCharInfo->pBankArray->Bank[nPack]) {
-#endif
 				if (ItemID == pPack->ID) {
 					if ((GetItemFromContents(pPack)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pPack)->IsStackable() != 1)) {
 						Count++;
@@ -9809,15 +9675,9 @@ DWORD FindBankItemCountByID(int ItemID)
 	}
 
 	// Check shared bank slots
-#ifdef NEWCHARINFO
 	if (pCharInfo) {
 		for (unsigned long nPack = 0; nPack < pCharInfo->SharedBankItems.Items.Size; nPack++) {
 			if (PCONTENTS pPack = pCharInfo->SharedBankItems.Items[nPack].pObject) {
-#else
-	if (pCharInfo->pSharedBankArray) {
-		for (unsigned long nPack = 0; nPack < NUM_SHAREDBANK_SLOTS; nPack++) {
-			if (PCONTENTS pPack = pCharInfo->pSharedBankArray->SharedBank[nPack]) {
-#endif
 				if (ItemID == pPack->ID) {
 					if ((GetItemFromContents(pPack)->Type != ITEMTYPE_NORMAL) || (((EQ_Item*)pPack)->IsStackable() != 1)) {
 						Count++;
@@ -9896,7 +9756,7 @@ PEQINVSLOT GetInvSlot(DWORD type, short invslot, short bagslot)
 //work in progress -eqmule
 BOOL IsItemInsideContainer(PCONTENTS pItem)
 {
-	if (pItem && pItem->GetGlobalIndex().Index.Slot1 >= 0 && pItem->GetGlobalIndex().Index.Slot1 <= NUM_INV_SLOTS) {
+	if (pItem && pItem->GetGlobalIndex().Index.Slot1 >= 0 && pItem->GetGlobalIndex().Index.Slot1 < (int)GetCurrentInvSlots()) {
 		PCHARINFO2 pChar2 = GetCharInfo2();
 		if (pChar2 && pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray[pItem->GetGlobalIndex().Index.Slot1]) {
 			if (PCONTENTS pItemFound = pChar2->pInventoryArray->InventoryArray[pItem->GetGlobalIndex().Index.Slot1]) {
@@ -10326,16 +10186,8 @@ int GetTargetBuffBySubCat(PCHAR subcat, DWORD classmask, int startslot)
 					if (char *ptr = pCDBStr->GetString(cat, 5, NULL)) {
 						if (!_stricmp(ptr, subcat))
 						{
-							if (classmask != Unknown) {
-								for (int N = 0; N < 16; N++)
-								{
-									if (classmask & (1 << N)) {
-											return i;
-										}
-									}
-								}
-							else {
-								return i;//Dest.DWord = ((((PCTARGETWND)pTargetWnd)->BuffTimer[i] / 1000) + 6)/6;
+							if (IsSpellUsableForClass(pSpell, classmask)) {
+								return i;
 							}
 						}
 					}
@@ -10361,15 +10213,7 @@ bool HasCachedTargetBuffSubCat(const char*subcat, PSPAWNINFO pSpawn, PcTargetBuf
 					if (char *ptr = pCDBStr->GetString(cat, 5, NULL)) {
 						if (!_stricmp(ptr, subcat))
 						{
-							if (classmask != Unknown) {
-								for (int N = 0; N < 16; N++)
-								{
-									if (classmask & (1 << N)) {
-										return true;
-									}
-								}
-							}
-							else {
+							if (IsSpellUsableForClass(pSpell, classmask)) {
 								return true;
 							}
 						}
@@ -11042,19 +10886,7 @@ int GetMountCount()
 	int Count = 0;
 	if (PCHARINFO pChar = GetCharInfo())
 	{
-#ifdef NEWCHARINFO
 		return pChar->MountKeyRingItems.Items.Size;
-#else
-		if (pChar && pChar->pMountsArray && pChar->pMountsArray->Mounts) {
-			for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++)
-			{
-				if (PCONTENTS pItem = pChar->pMountsArray->Mounts[nSlot])
-				{
-					Count++;
-				}
-			}
-		}
-#endif
 	}
 	return Count;
 }
@@ -11063,19 +10895,7 @@ int GetIllusionCount()
 	int Count = 0;
 	if (PCHARINFO pChar = GetCharInfo())
 	{
-#ifdef NEWCHARINFO
 		return pChar->IllusionKeyRingItems.Items.Size;
-#else
-		if (pChar && pChar->pIllusionsArray && pChar->pIllusionsArray->Illusions) {
-			for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++)
-			{
-				if (PCONTENTS pItem = pChar->pIllusionsArray->Illusions[nSlot])
-				{
-					Count++;
-				}
-			}
-		}
-#endif
 	}
 	return Count;
 }
@@ -11084,20 +10904,7 @@ int GetFamiliarCount()
 	int Count = 0;
 	if (PCHARINFO pChar = GetCharInfo())
 	{
-#ifdef NEWCHARINFO
 		return pChar->FamiliarKeyRingItems.Items.Size;
-#else
-		if (pChar && pChar->pFamiliarArray && pChar->pFamiliarArray->Familiars) {
-			for (unsigned long nSlot = 0; nSlot < MAX_KEYRINGITEMS; nSlot++)
-			{
-				if (PCONTENTS pItem = pChar->pFamiliarArray->Familiars[nSlot])
-
-				{
-					Count++;
-				}
-			}
-		}
-#endif
 	}
 	return Count;
 }
@@ -11530,7 +11337,7 @@ int GetFreeStack(PCONTENTS pCont)
 		if (PCHARINFO2 pChar2 = GetCharInfo2()) {
 			if (!((EQ_Item*)pCont)->IsStackable())
 				return 0;
-			for (DWORD slot = BAG_SLOT_START-1/*we want to check ammo slot as well...*/; slot < NUM_INV_SLOTS; slot++)
+			for (int slot = BAG_SLOT_START-1/*we want to check ammo slot as well...*/; slot < GetCurrentInvSlots(); slot++)
 			{
 				if (pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray[slot]) {
 					if (PCONTENTS pTempItem = pChar2->pInventoryArray->InventoryArray[slot])
@@ -11575,7 +11382,7 @@ int GetFreeInventory(int nSize)
 	int freeslots = 0;
 	if (PCHARINFO2 pChar2 = GetCharInfo2()) {
 		if(nSize) {
-			for (DWORD slot = BAG_SLOT_START; slot < NUM_INV_SLOTS; slot++) {
+			for (int slot = BAG_SLOT_START; slot < GetCurrentInvSlots(); slot++) {
 				if (pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray && pChar2->pInventoryArray->InventoryArray[slot]) {
 					if (PCONTENTS pItem = pChar2->pInventoryArray->InventoryArray[slot]) {
 						if (GetItemFromContents(pItem)->Type == ITEMTYPE_PACK && GetItemFromContents(pItem)->SizeCapacity >= nSize) {
@@ -11601,7 +11408,7 @@ int GetFreeInventory(int nSize)
 			}
 		}
 		else {
-			for (DWORD slot = BAG_SLOT_START; slot<NUM_INV_SLOTS; slot++) {
+			for (int slot = BAG_SLOT_START; slot<GetCurrentInvSlots(); slot++) {
 				if (!HasExpansion(EXPANSION_HoT) && slot > BAG_SLOT_START + 7) {
 					break;
 				}
@@ -11736,7 +11543,7 @@ bool WillFitInInventory(PCONTENTS pContent)
 		if (PCHARINFO2 pChar2 = (PCHARINFO2)GetCharInfo2()) {
 			if (pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray)
 			{
-				for (DWORD slot = BAG_SLOT_START; slot < NUM_INV_SLOTS; slot++)
+				for (int slot = BAG_SLOT_START; slot < GetCurrentInvSlots(); slot++)
 				{
 					if (PCONTENTS pCont = pChar2->pInventoryArray->InventoryArray[slot])
 					{

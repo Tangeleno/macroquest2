@@ -243,7 +243,30 @@ void Pulse()
 	}
 
 	if ((unsigned int)GetCharInfo()->charinfo_info & 0x80000000) return;
-
+	if (pCharInfo->pXTargetMgr && ((PSPAWNINFO)pLocalPlayer)->AssistName[0]) {
+		if (PSPAWNINFO pAss = (PSPAWNINFO)GetSpawnByName(((PSPAWNINFO)pLocalPlayer)->AssistName))
+		{
+			bool bFound = false;
+			for (int n = 0; n < pCharInfo->pXTargetMgr->XTargetSlots.Count; n++)
+			{
+				XTARGETSLOT xts = pCharInfo->pXTargetMgr->XTargetSlots[n];
+				if (xts.xTargetType && xts.XTargetSlotStatus && xts.SpawnID == pAss->SpawnID)
+				{
+					bFound = true;
+				}
+			}
+			if (!bFound)
+			{
+				//we clear it because the player is not currently fighting that spawn.
+				//client does not clear this by itself so we have to.
+				((PSPAWNINFO)pLocalPlayer)->AssistName[0] = '\0';
+			}
+		}
+		else
+		{
+			((PSPAWNINFO)pLocalPlayer)->AssistName[0] = '\0';
+		}
+	}
 	if (pChar != pCharOld && WereWeZoning)
 	{
 		WereWeZoning = FALSE;
@@ -390,7 +413,8 @@ int Heartbeat()
 #ifndef ISXEQ
 	while (TickDiff >= 100) {
 		TickDiff -= 100;
-		if (gDelay>0) gDelay--;
+		if (gDelay > 0)
+			gDelay--;
 		DropTimers();
 	}
 #endif
@@ -826,7 +850,8 @@ public:
 			if (pTarget) {
 				curBuff.timeStamp = EQGetTime();
 				CachedBuffsMap[pTarget->Data.SpawnID][curBuff.spellId] = curBuff;
-				if ((curBuff.slot >= 42 && (pTarget->Data.Type == SPAWN_PLAYER || pTarget->Data.Mercenary)) || (curBuff.slot >= 55) || (curBuff.slot < 0)) {
+				//if ((curBuff.slot >= 42 && (pTarget->Data.Type == SPAWN_PLAYER || pTarget->Data.Mercenary)) || (curBuff.slot >= 55) || (curBuff.slot < 0)) {
+				if ((curBuff.slot > NUM_BUFF_SLOTS && (pTarget->Data.Type == SPAWN_PLAYER || pTarget->Data.Mercenary)) || curBuff.slot < 0) {
 					continue;
 				}
 				targetBuffSlotToCasterMap[curBuff.slot] = curBuff.casterName;
@@ -890,16 +915,27 @@ void RemoveLoginPulse()
 }
 void InitializeLoginPulse()
 {
-	if (*(DWORD*)__heqmain && !LoginController__GiveTime) {
-		if (!(LoginController__GiveTime = FindPattern(*(DWORD*)__heqmain, 0x200000, lpPattern, lpMask)))
+	if (*(DWORD*)__heqmain)
+	{
+		if (!LoginController__GiveTime)
 		{
-			MessageBox(NULL, "MQ2 needs an update.", "Couldn't find LoginController__GiveTime", MB_SYSTEMMODAL | MB_OK);
-			return;
-		}
-		if (LoginController__GiveTime) {
-			if (*(BYTE*)LoginController__GiveTime != 0xe9) {
-				EzDetourwName(LoginController__GiveTime, &CEverQuestHook::LoginController__GiveTime_Detour, &CEverQuestHook::LoginController__GiveTime_Tramp, "LoginController__GiveTime");
+			if (!(LoginController__GiveTime = FindPattern(*(DWORD*)__heqmain, 0x200000, lpPattern, lpMask)))
+			{
+				MessageBox(NULL, "Couldn't find LoginController__GiveTime", "MQ2 needs an update.", MB_SYSTEMMODAL | MB_OK);
+				return;
 			}
+			if (LoginController__GiveTime) {
+				if (*(BYTE*)LoginController__GiveTime != 0xe9) {
+					EzDetourwName(LoginController__GiveTime, &CEverQuestHook::LoginController__GiveTime_Detour, &CEverQuestHook::LoginController__GiveTime_Tramp, "LoginController__GiveTime");
+				}
+			}
+		}
+	}
+	else
+	{
+		if (GetGameState() == GAMESTATE_POSTFRONTLOAD)
+		{
+			MessageBox(NULL, "Failed to locate eqmain.dll", "InitializeLoginPulse", MB_OK | MB_SYSTEMMODAL);
 		}
 	}
 }
