@@ -107,7 +107,7 @@ extern CRITICAL_SECTION gPluginCS;
 //#define NEWCHARINFO
 #elif defined(EQBETA)
 #include "eqgame(beta).h"
-#define NEWCHARINFO
+//#define NEWCHARINFO
 #elif defined(ROF2EMU)
 #include "eqgame(emu).h"
 //#define NEWCHARINFO
@@ -346,6 +346,7 @@ EQLIB_API bool SendComboSelect(PCHAR WindowName, PCHAR ScreenID, DWORD Value);
 EQLIB_API bool SendListSelect(PCHAR WindowName, PCHAR ScreenID, DWORD Value);
 EQLIB_API bool SendListSelect2(CXWnd *pList, LONG ListIndex);
 EQLIB_API bool SendWndClick2(CXWnd *pWnd, PCHAR ClickNotification);
+EQLIB_API bool SendTabSelect(PCHAR WindowName, PCHAR ScreenID, DWORD Value);    // added by hytiek 8.11.2020
 
 EQLIB_API VOID CreateMQ2NewsWindow();
 EQLIB_API VOID DeleteMQ2NewsWindow();
@@ -458,9 +459,10 @@ LEGACY_API BOOL ParseMacroData(PCHAR szOriginal, SIZE_T BufferSize);
 LEGACY_API BOOL AddMQ2Data(PCHAR szName, fMQData Function);
 LEGACY_API BOOL RemoveMQ2Data(PCHAR szName);
 LEGACY_API MQ2Type *FindMQ2DataType(PCHAR szName);
-LEGACY_API void GetMQ2DataTypeMap(std::unordered_map<std::string, MQ2Type*>*map);
+LEGACY_API int FindMQ2DataTypeMemberSize(PCHAR Name);
+LEGACY_API bool FindMQ2DataTypeMemberName(PCHAR Name, DWORD index, PCHAR Out, size_t OutSize);
+LEGACY_API DWORD FindMQ2DataTypeMemberID(PCHAR Name, DWORD index);
 LEGACY_API PMQ2DATAITEM FindMQ2Data(PCHAR szName);
-LEGACY_API PDATAVAR FindMQ2DataVariable(PCHAR szName);
 LEGACY_API BOOL ParseMQ2DataPortion(PCHAR szOriginal, MQ2TYPEVAR &Result);
 LEGACY_API bool AddMQ2TypeExtension(const char* typeName, MQ2Type* extension);
 LEGACY_API bool RemoveMQ2TypeExtension(const char* typeName, MQ2Type* extension);
@@ -500,7 +502,9 @@ EQLIB_API CXStr *__cdecl CleanItemTags(CXStr *Out, const CXStr &In, bool bFlag);
 #endif
 EQLIB_API float HeadingDiff(float h1, float h2, float *DiffOut);
 EQLIB_API float FixHeading(float Heading);
+#if defined(NAVUSESOFFSETS)
 EQLIB_API int FlushDxKeyboard();
+#endif
 EQLIB_API float get_bearing(float x1, float y1, float x2, float y2);
 EQLIB_API unsigned long GetFastTime(void);
 EQLIB_API bool CopyLayout(const CXStr& currlayout, const CXStr& newlayout, bool bHotbuttons, bool bLoadouts, bool bSocials, CXStr& ErrorOut, bool bForceReload = false);
@@ -705,7 +709,7 @@ EQLIB_API bool LoH_HT_Ready();
 #ifndef ISXEQ
 LEGACY_API PCHAR GetFuncParam(PCHAR szMacroLine, DWORD ParamNum, PCHAR szParamName, size_t ParamNameLen, PCHAR szParamType, size_t ParamTypeLen);
 //LEGACY_API PCHAR GetFuncParam(PCHAR szMacroLine, DWORD ParamNum, PCHAR szParamName, PCHAR szParamType);
-LEGACY_API PDATAVAR FindMQ2DataVariable(PCHAR Name);
+LEGACY_API PDATAVAR FindMQ2DataVariable(PCHAR Name, bool bExact = true);
 LEGACY_API BOOL AddMQ2DataVariable(PCHAR Name, PCHAR Index, MQ2Type *pType, PDATAVAR *ppHead, PCHAR Default);
 LEGACY_API BOOL AddMQ2DataVariableFromData(PCHAR Name, PCHAR Index, MQ2Type *pType, PDATAVAR *ppHead, MQ2TYPEVAR Default);
 LEGACY_API PDATAVAR *FindVariableScope(PCHAR Name);
@@ -944,7 +948,7 @@ EQLIB_API void PrettifyNumber(char* string, size_t bufferSize, int decimals = 0)
 #define XWM_FOCUS					33
 #define XWM_LOSTFOCUS				34
 #define XWM_TEXTENTRY_COMPLETE		40
-#define XWN_FILESELECTION_COMPLETE	41
+#define XWN_FILESELECTION_COMPLETE	39//check the rest
 #define XWN_ICONSELECTION_COMPLETE	42
 #define XWN_RELOAD_INI				43
 #define XWN_THUMBTRACK				44

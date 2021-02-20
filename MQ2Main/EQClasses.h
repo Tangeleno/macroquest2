@@ -88,7 +88,7 @@ class CEditWnd;
 class CEQSuiteTextureLoader;
 class CEverQuest;
 class CExploreModeWnd;
-class CFacePick;
+class CPlayerCustomizationWnd;
 class CFactionWnd;
 class CExtendedTargetWnd;
 class CFindItemWnd;
@@ -517,9 +517,16 @@ public:
 	EQLIB_OBJECT char GetChar(long) const;
 	EQLIB_OBJECT char SetChar(long, char);
 
-	EQLIB_OBJECT CXStr Copy(long, long)const;
+	EQLIB_OBJECT CXStr Copy(long Start, long Count) const;
 	EQLIB_OBJECT CXStr Left(int)const;
+	#ifdef CXStr__Mid_x
 	EQLIB_OBJECT CXStr Mid(int, int)const;
+	#else
+	EQLIB_OBJECT CXStr CXStr::Mid(int First, int Len) const
+	{
+		return Copy(First, Len);
+	}
+	#endif
 	EQLIB_OBJECT CXStr Right(int)const;
 	//EQLIB_OBJECT enum EStringEncoding CXStr::GetEncoding(void)const;
 	EQLIB_OBJECT int PrintString(char const*, ...);
@@ -529,7 +536,18 @@ public:
 	EQLIB_OBJECT int operator==(char const*) const;
 	EQLIB_OBJECT int operator==(const CXStr&) const;
 	EQLIB_OBJECT int operator>(const CXStr&) const;
+	#if defined(ROF2EMU) || defined(UFEMU)
 	EQLIB_OBJECT long GetLength() const;
+	#else
+	EQLIB_OBJECT long GetLength() const
+	{
+		if (Ptr != NULL)
+		{
+			return Ptr->Length;
+		}
+		return 0;
+	}
+	#endif
 	EQLIB_OBJECT wchar_t GetUnicode(long pos) const;
 	EQLIB_OBJECT unsigned short SetUnicode(long, unsigned short);
 	EQLIB_OBJECT bool FindNext(char ch, int& pos) const;
@@ -1362,7 +1380,7 @@ public:
 /*0x27c*/   unsigned __int32	ButtonStyle;
 /*0x280*/
 EQLIB_OBJECT CButtonWnd::CButtonWnd(class CXWnd *,unsigned __int32,class CXRect,class CXPoint,class CXSize,class CTextureAnimation *,class CTextureAnimation *,class CTextureAnimation *,class CTextureAnimation *,class CTextureAnimation *,class CTextureAnimation *,class CTextureAnimation *,class CTextureAnimation *,class CTextureAnimation *,class CTextureAnimation *);
-EQLIB_OBJECT void CButtonWnd::SetCheck(bool);
+EQLIB_OBJECT void CButtonWnd::SetCheck(bool bCheck, bool bNoSound = false);
 // virtual
 //EQLIB_OBJECT CButtonWnd::CButtonWnd() {};
 EQLIB_OBJECT CButtonWnd::~CButtonWnd(void);
@@ -1541,7 +1559,16 @@ EQLIB_OBJECT void CChatManager::SetChannelMap(int,class CChatWindow *);
 EQLIB_OBJECT void CChatManager::SetLockedActiveChatWindow(CChatWindow *);
 EQLIB_OBJECT void CChatManager::UpdateContextMenus(class CChatWindow *);
 EQLIB_OBJECT void CChatManager::UpdateTellMenus(class CChatWindow *);
+#if defined(ROF2EMU) || defined(UFEMU)
 EQLIB_OBJECT CChatWindow *CChatManager::GetLockedActiveChatWindow(void);
+#else
+EQLIB_OBJECT CChatWindow *CChatManager::GetLockedActiveChatWindow(void)
+{
+	//return (CChatWindow *)
+	PCXWND pWnd = (((EQCHATMGR*)this)->LockedActive != -1) ? ((EQCHATMGR*)this)->ChatWnd[((EQCHATMGR*)this)->LockedActive] : NULL;
+	return (CChatWindow *)pWnd;
+}
+#endif
 #if !defined(ROF2EMU) && !defined(UFEMU)
 EQLIB_OBJECT void CChatManager::CreateChatWindow(CXWnd*pParentWnd, int ID, char* Name, int Language, int DefaultChannel, int ChatChannel, char* szTellTarget, int FontStyle, bool bScrollbar, bool bHighLight, COLORREF HighlightColor);
 #else
@@ -2188,9 +2215,9 @@ EQLIB_OBJECT float GetDistanceSquared(const CVector3& vec)const
 	CVector3 Delta = *this - vec;
 	return Delta.GetLengthSquared();
 }
-	float X;
-	float Y;
-	float Z;
+	float X = 0;
+	float Y = 0;
+	float Z = 0;
 };
 class CDisplay
 {
@@ -2826,24 +2853,24 @@ class CFactionWnd : public CSidlScreenWnd
 public:
 	EQLIB_OBJECT CFactionWnd::CFactionWnd(class CXWnd *);
 };
-class CFacePick : public CSidlScreenWnd
+class CPlayerCustomizationWnd : public CSidlScreenWnd
 {
 public:
-EQLIB_OBJECT CFacePick::CFacePick(class CXWnd *);
-EQLIB_OBJECT void CFacePick::Activate(void);
-EQLIB_OBJECT void CFacePick::SetFaceSelectionsFromPlayer(void);
+EQLIB_OBJECT CPlayerCustomizationWnd::CPlayerCustomizationWnd(class CXWnd *);
+EQLIB_OBJECT void CPlayerCustomizationWnd::Activate(void);
+EQLIB_OBJECT void CPlayerCustomizationWnd::SetFaceSelectionsFromPlayer(void);
 // virtual
-EQLIB_OBJECT CFacePick::~CFacePick(void);
-EQLIB_OBJECT int CFacePick::Draw(void)const;
-EQLIB_OBJECT int CFacePick::OnProcessFrame(void);
-EQLIB_OBJECT int CFacePick::WndNotification(class CXWnd *,unsigned __int32,void *);
-//EQLIB_OBJECT void * CFacePick::`scalar deleting destructor'(unsigned int);
-//EQLIB_OBJECT void * CFacePick::`vector deleting destructor'(unsigned int);
-EQLIB_OBJECT void CFacePick::Deactivate(void);
+EQLIB_OBJECT CPlayerCustomizationWnd::~CPlayerCustomizationWnd(void);
+EQLIB_OBJECT int CPlayerCustomizationWnd::Draw(void)const;
+EQLIB_OBJECT int CPlayerCustomizationWnd::OnProcessFrame(void);
+EQLIB_OBJECT int CPlayerCustomizationWnd::WndNotification(class CXWnd *,unsigned __int32,void *);
+//EQLIB_OBJECT void * CPlayerCustomizationWnd::`scalar deleting destructor'(unsigned int);
+//EQLIB_OBJECT void * CPlayerCustomizationWnd::`vector deleting destructor'(unsigned int);
+EQLIB_OBJECT void CPlayerCustomizationWnd::Deactivate(void);
 // private
-EQLIB_OBJECT void CFacePick::CycleThroughFHEB(int,int);
-EQLIB_OBJECT void CFacePick::Init(void);
-EQLIB_OBJECT void CFacePick::ShowButtonGroup(int,bool);
+EQLIB_OBJECT void CPlayerCustomizationWnd::CycleThroughFHEB(int,int);
+EQLIB_OBJECT void CPlayerCustomizationWnd::Init(void);
+EQLIB_OBJECT void CPlayerCustomizationWnd::ShowButtonGroup(int,bool);
 };
 class CFindItemWnd : public CSidlScreenWnd//, public WndEventHandler but we just add the member LastCheckTime
 {
@@ -3292,7 +3319,9 @@ public:
 	CButtonWnd	*GroupTankButton[6];
 	CButtonWnd	*GroupAssistButton[6];
 	CButtonWnd	*GroupPullerButton[6];
-    CButtonWnd	*GroupMarkNPCButton[6];
+	#if !defined(ROF2EMU) && !defined(UFEMU)
+	CButtonWnd	*GroupMarkNPCButton[6];
+	#endif
 	CLabel		*AggroPercLabel[6];
 	long		Timer;
 	CContextMenu *GroupContextMenu;
@@ -3683,6 +3712,7 @@ public:
 /*0x264*/ int					Unknown0x264;
 /*0x268*/
 EQLIB_OBJECT void CHotButton::SetButtonSize(int percent, bool bUpdateParent = true);
+EQLIB_OBJECT void CHotButton::SetCheck(bool bCheck);
 };
 class CHotButtonWnd : public CSidlScreenWnd
 {
@@ -3999,6 +4029,7 @@ enum ItemDisplayFlags
 class CItemDisplayWnd : public CSidlScreenWnd
 {
 public:
+#if !defined(ROF2EMU) && !defined(UFEMU)
 /*0x0230*/ CStmlWnd *pDescription;
 /*0x0234*/ CStmlWnd *pName;
 /*0x0238*/ CButtonWnd *pIconButton;
@@ -4044,7 +4075,7 @@ public:
 /*0x031c*/ bool bClickedTwink;
 /*0x0320*/ int HeroicCount;
 /*0x0324*/ int ItemInfoCount;
-/*0x0328*/ CLabel *pItemInfoLabel[13];//for sure at 0x330
+/*0x0328*/ CLabel *pItemInfoLabel[0xd];//for sure at 0x330
 /*0x035c*/ CLabel *pStatLabel[0x1a][3];//size 0x138
 /*0x0494*/ CLabel *pValueLabel[0x1a][3];//size 0x138
 /*0x05cc*/ CLabel *pHeroicLabel[0xd];
@@ -4052,7 +4083,59 @@ public:
 /*0x0604*/ int RightClickMenuSocketSlot;
 /*0x0608*/ int WindowID;
 /*0x060c*/
-
+#else
+/*0x0220*/ CStmlWnd *pDescription;
+/*0x0224*/ CStmlWnd *pName;
+/*0x0228*/ CButtonWnd *pIconButton;
+/*0x022c*/ CStmlWnd *pLore;
+/*0x0230*/ CTabWnd *pItemDescriptionTab;
+/*0x0234*/ CPageWnd *pDescriptionPage;
+/*0x0238*/ CPageWnd *pLorePage;
+/*0x023c*/ CSidlScreenWnd *pAppearanceSocketScreen;
+/*0x0240*/ CButtonWnd *pAppearanceSocketItem;
+/*0x0244*/ CButtonWnd *pAppearanceSocketBuyButton;
+/*0x0248*/ CStmlWnd *pAppearanceSocketDescription;
+/*0x024c*/ CSidlScreenWnd *pItemSocketScreen[6];
+/*0x0264*/ CButtonWnd *pItemSocketItemButton[6];
+/*0x027c*/ CStmlWnd *pItemSocketDescription[6];
+/*0x0294*/ PCXSTR ItemInfo;
+/*0x0298*/ PCXSTR MoreText;
+/*0x029c*/ PCXSTR LoreText;
+/*0x02a0*/ PCXSTR CreatorName;
+/*0x02a4*/ PCXSTR BackupTabTitle;
+/*0x02a8*/ PCXSTR SolventText;
+/*0x02ac*/ PCXSTR InformationText;
+/*0x02b0*/ PCONTENTS pCurrentItem;
+/*0x02b4*/ bool bActiveItem;
+/*0x02b5*/ bool bItemTextSet;
+/*0x02b8*/ CTextureAnimation* pTABuffIcons;
+/*0x02bc*/ CTextureAnimation* pTADragIcons;
+/*0x02c0*/ bool bTaggable;
+/*0x02c1*/ bool bFailed;
+/*0x02c4*/ UINT TabCount;
+/*0x02c8*/ CLabel *pModButtonLabel;
+/*0x02cc*/ CLabel *IDW_ClassTitle1;
+/*0x02d0*/ CLabel *IDW_ClassTitle2;
+/*0x02d4*/ CLabel *IDW_RaceTitle1;//IDW_RaceTitle2 it's a bug in this client i think
+/*0x02d8*/ CLabel *IDW_RaceTitle2;
+/*0x02dc*/ CLabel *IDW_DeityTitle;
+/*0x02e0*/ CLabel *pMadeByLabel;
+/*0x02e4*/ int Row;
+/*0x02e8*/ bool bAntiTwink;
+/*0x02ec*/ CButtonWnd *pModButton;
+/*0x02f0*/ int Group[6];
+/*0x0308*/ bool bClickedTwink;
+/*0x030c*/ int HeroicCount;
+/*0x0310*/ int ItemInfoCount;
+/*0x0314*/ CLabel *pItemInfoLabel[0xC];//for sure at 0x314 in rof2
+/*0x0344*/ CLabel *pStatLabel[0x1a][3];//size 0x138
+/*0x047c*/ CLabel *pValueLabel[0x1a][3];//size 0x138
+/*0x05b4*/ CLabel *pHeroicLabel[0xd];//its 5b4 in rof2
+/*0x05e8*/ int RightClickMenuID;
+/*0x05ec*/ int RightClickMenuSocketSlot;
+/*0x05f0*/ int WindowID;
+/*0x05f4*/
+#endif
 EQLIB_OBJECT CItemDisplayWnd::CItemDisplayWnd(CXWnd *);
 EQLIB_OBJECT class CXStr CItemDisplayWnd::CreateEquipmentStatusString(class EQ_Item *);
 EQLIB_OBJECT void CItemDisplayWnd::SetItem(PCONTENTS *pCont, int flags);
@@ -4904,58 +4987,58 @@ public:
 		EQLIB_OBJECT bool CMerchantWnd::PurchasePageHandler::RequestGetItem(int);
 		EQLIB_OBJECT void CMerchantWnd::PurchasePageHandler::RequestPutItem(int);
 	};
-	//size 0x420 in Nov 02 2017 Beta  -eqmule
-	/*0x22c*/ UINT Filler0x22c;
-	/*0x230*/ UINT NextRefreshTime;
-	/*0x234*/ bool bInventoryWasActive;
-	/*0x240*/ VeArray<VePointer<MerchantPageHandler>> PageHandlers;
-	/*0x24c*/ float MerchantGreed;
-	/*0x250*/ ItemGlobalIndex ItemLocation;//size 0xc
-	/*0x25c*/ BYTE Unknown0x254[0x8];
-	/*0x264*/ VePointer<CONTENTS>pSelectedItem;
-	/*0x268*/ __time32_t MailExpireTime;
-	/*0x26c*/ bool bAutoRetrieveingMail;
-	/*0x270*/ BYTE Unknown0x268[0x10];
-	/*0x280*/ PCHAR Labels[0xc];
-	/*0x2b0*/ CEditWnd    *SearchEdit;//0x2b0 for sure
-	/*0x2b4*/ CButtonWnd  *SearchButton;
-	/*0x2b8*/ CLabel *MerchantNameLabel;
-	/*0x2bc*/ CLabel *SelectedItemLabel;
-	/*0x2c0*/ CLabel *SelectedPriceLabel;
-	/*0x2c4*/ CButtonWnd  *InspectButton;
-	/*0x2c8*/ CButtonWnd  *PreviewButton;
-	/*0x2cc*/ CButtonWnd  *SelectedItemButton;
-	/*0x2d0*/ CButtonWnd  *BuyButton;
-	/*0x2d4*/ CButtonWnd  *BuyMarketPlaceButton;
-	/*0x2d8*/ CButtonWnd  *SellButton;
-	/*0x2dc*/ CButtonWnd	*RecoverButton;
-	/*0x2e0*/ CButtonWnd	*RetrieveButton;
-	/*0x2e4*/ CButtonWnd	*RetrieveAllButton;
-	/*0x2e8*/ CButtonWnd	*SendButton;
-	/*0x2ec*/ CButtonWnd	*AdventureButton;
-	/*0x2f0*/ CLabel		*SendToLabel;
-	/*0x2f4*/ CEditWnd	*SendToEdit;
-	/*0x2f8*/ CLabel      *NoteLabel;
-	/*0x2fc*/ CEditWnd    *NoteEdit;
-	/*0x300*/ CButtonWnd	*ClearNoteButton;
-	/*0x304*/ CListWnd	*ItemsList;//at 0x304 for sure! see 742D04 Nov 03 2017 Beta -eqmule
-	/*0x308*/ CListWnd	*ItemsRecoveryList;
-	/*0x30c*/ CListWnd	*ItemsMailList;
-	/*0x310*/ CButtonWnd	*DoneButton;
-	/*0x314*/ CPageWnd	*PurchasePage;
-	/*0x318*/ CPageWnd	*RecoveryPage;
-	/*0x31c*/ CPageWnd	*MailPage;
-	/*0x320*/ CTabWnd		*TabWindow;
-	/*0x324*/ CButtonWnd	*UsableButton;
-	/*0x328*/ CLabel		*CurrentCurrencyLabel;
-	/*0x32c*/ int Unknown0x32c;
-	/*0x330*/ int Unknown0x330;
-	/*0x334*/ int Unknown0x334;
-	/*0x338*/ int Unknown0x338;
-	/*0x33C*/ int Unknown0x33C;
-	/*0x340*/ int Guk_Currency;
-	/*0x344*/ BYTE Unknown0x340[0x100];
-	/*0x444*/
+	//size 0x458 in Aug 14 2020 see 5583F2 -eqmule
+	/*0x244*/ UINT			Filler0x244;
+	/*0x248*/ UINT			NextRefreshTime;
+	/*0x24c*/ bool			bInventoryWasActive;
+	/*0x250*/ VeArray<VePointer<MerchantPageHandler>> PageHandlers;//size 0xc
+	/*0x25c*/ float			MerchantGreed;
+	/*0x260*/ ItemGlobalIndex ItemLocation;//size 0xc
+	/*0x26c*/ BYTE			Unknown0x26c[0x8];
+	/*0x274*/ VePointer<CONTENTS>pSelectedItem;
+	/*0x278*/ __time32_t	MailExpireTime;
+	/*0x27c*/ bool			bAutoRetrieveingMail;
+	/*0x280*/ BYTE			Unknown0x280[0x14];
+	/*0x294*/ PCHAR			Labels[0xc];
+	/*0x2c4*/ CEditWnd		*SearchEdit;//0x2c4 for sure see 79DB91 -eqmule
+	/*0x2c8*/ CButtonWnd	*SearchButton;
+	/*0x2cc*/ CLabel		*MerchantNameLabel;
+	/*0x2d0*/ CLabel		*SelectedItemLabel;
+	/*0x2d4*/ CLabel		*SelectedPriceLabel;
+	/*0x2d8*/ CButtonWnd	*InspectButton;
+	/*0x2dc*/ CButtonWnd	*PreviewButton;
+	/*0x2e0*/ CButtonWnd	*SelectedItemButton;
+	/*0x2e4*/ CButtonWnd	*BuyButton;
+	/*0x2e8*/ CButtonWnd	*BuyMarketPlaceButton;
+	/*0x2ec*/ CButtonWnd	*SellButton;
+	/*0x2f0*/ CButtonWnd	*RecoverButton;
+	/*0x2f4*/ CButtonWnd	*RetrieveButton;
+	/*0x2f8*/ CButtonWnd	*RetrieveAllButton;
+	/*0x2fc*/ CButtonWnd	*SendButton;
+	/*0x300*/ CButtonWnd	*AdventureButton;
+	/*0x304*/ CLabel		*SendToLabel;
+	/*0x308*/ CEditWnd		*SendToEdit;
+	/*0x30c*/ CLabel		*NoteLabel;
+	/*0x310*/ CEditWnd		*NoteEdit;
+	/*0x314*/ CButtonWnd	*ClearNoteButton;
+	/*0x318*/ CListWnd		*ItemsList;//at 0x318 for sure! see 79DF8D -eqmule
+	/*0x31c*/ CListWnd		*ItemsRecoveryList;
+	/*0x320*/ CListWnd		*ItemsMailList;
+	/*0x324*/ CButtonWnd	*DoneButton;
+	/*0x328*/ CPageWnd		*PurchasePage;
+	/*0x32c*/ CPageWnd		*RecoveryPage;
+	/*0x330*/ CPageWnd		*MailPage;
+	/*0x334*/ CTabWnd		*TabWindow;
+	/*0x338*/ CButtonWnd	*UsableButton;
+	/*0x33c*/ CLabel		*CurrentCurrencyLabel;
+	/*0x340*/ int			Unknown0x340;
+	/*0x344*/ int			Unknown0x344;
+	/*0x348*/ int			Unknown0x348;
+	/*0x34c*/ int			Unknown0x34c;
+	/*0x350*/ int			Unknown0x350;
+	/*0x354*/ int			Guk_Currency;
+	/*0x358*/ BYTE			Unknown0x358[0x100];
+	/*0x458*/
 #else
 	template <typename TItem> class ItemContainer
 	{
@@ -5247,10 +5330,18 @@ public:
 /*0x258*/
 #endif
 EQLIB_OBJECT CPageWnd::CPageWnd(class CXWnd *,unsigned __int32,class CXRect,class CXStr,class CPageTemplate *);
-EQLIB_OBJECT CXStr CPageWnd::GetTabText(bool bSomething = false) const;
 EQLIB_OBJECT void CPageWnd::SetTabText(CXStr &)const;
 #if !defined(ROF2EMU) && !defined(UFEMU)
+EQLIB_OBJECT CXStr CPageWnd::GetTabText(bool bSomething = false) const
+{
+	if (CXStr *txt = (CXStr *)&this->TabText)
+		return *txt;
+	else
+		return "";
+}
 EQLIB_OBJECT void CPageWnd::FlashTab(bool bFlash, int mstime) const;
+#else
+EQLIB_OBJECT CXStr CPageWnd::GetTabText() const;
 #endif
 // virtual
 EQLIB_OBJECT CPageWnd::~CPageWnd(void);
@@ -6760,6 +6851,7 @@ public:
 	//we include CXW instead...
 /*0x000*/ CXW
 /*0x1F0*/ PCXSTR STMLText;
+//*0x1F0*/ CXStr STMLText;
 /*0x1F4*/ CircularArrayClass2<STextLine> TextLines;//size 0x24
 /*0x21c*/ __int32 TextTotalHeight;
 /*0x220*/ __int32 TextTotalWidth;//0x220 see 8F5A6F in sep 11 2017 test - eqmule
@@ -6793,7 +6885,17 @@ public:
 EQLIB_OBJECT CStmlWnd::CStmlWnd(class CXWnd *,unsigned __int32,class CXRect);
 EQLIB_OBJECT bool CStmlWnd::CanGoBackward(void);
 EQLIB_OBJECT CXSize CStmlWnd::AppendSTML(CXStr); // lax 11-15-2003
-EQLIB_OBJECT class CXStr CStmlWnd::GetSTMLText(void)const;
+#ifdef CStmlWnd__GetSTMLText_x
+EQLIB_OBJECT CXStr CStmlWnd::GetSTMLText(void) const;
+#else
+EQLIB_OBJECT CXStr CStmlWnd::GetSTMLText(void) const
+{
+	if (CXStr *txt = (CXStr *)&this->STMLText)
+		return *txt;
+	else
+		return "";
+}
+#endif
 EQLIB_OBJECT class CXStr CStmlWnd::GetVisibleText(class CXStr&,class CXRect)const;
 EQLIB_OBJECT static class CXStr __cdecl CStmlWnd::MakeStmlColorTag(unsigned long);
 EQLIB_OBJECT static class CXStr __cdecl CStmlWnd::MakeWndNotificationTag(unsigned __int32,class CXStr&,class CXStr&);
@@ -7223,7 +7325,7 @@ EQLIB_OBJECT CTextureAnimation::CTextureAnimation(void);
 EQLIB_OBJECT class CTextureAnimation & CTextureAnimation::operator=(class CTextureAnimation const &);
 EQLIB_OBJECT class CXPoint CTextureAnimation::GetHotspot(void)const;
 EQLIB_OBJECT class CXStr CTextureAnimation::GetName(void)const;
-EQLIB_OBJECT int CTextureAnimation::AddBlankFrame(unsigned __int32,class CXPoint);
+EQLIB_OBJECT int CTextureAnimation::AddBlankFrame(unsigned __int32 Ticks, class CXPoint Hotspot);
 EQLIB_OBJECT int CTextureAnimation::AddFrame(class CUITexturePiece,unsigned __int32,class CXPoint);
 EQLIB_OBJECT int CTextureAnimation::AddFrame(class CUITextureInfo const *,class CXRect,unsigned __int32,class CXPoint);
 EQLIB_OBJECT int CTextureAnimation::Draw(class CXPoint,class CXRect,unsigned long,unsigned long)const;
@@ -8195,7 +8297,7 @@ EQLIB_OBJECT bool EQ_Item::IsKeyRingItem(KeyRingType type)const;
 EQLIB_OBJECT bool EQ_Item::CanGoInBag(PCONTENTS *pCont, int OutputText = 0, bool mustbefalse = false) const;
 EQLIB_OBJECT bool EQ_Item::IsEmpty(void) const;
 EQLIB_OBJECT int EQ_Item::GetMaxItemCount(void)const;
-EQLIB_OBJECT int EQ_Item::GetAugmentFitBySlot(PCONTENTS *Aug, int Slot, bool bCheckSlot = true, bool bCheckDup = true)const; 
+EQLIB_OBJECT int EQ_Item::CanGemFitInSlot(PCONTENTS *Aug, int Slot, bool bCheckSlot = true, bool bCheckDup = true)const; 
 ITEMINFO Data;
 };
 
@@ -8305,17 +8407,58 @@ public:
 EQLIB_OBJECT EQ_Spell::~EQ_Spell(void);
 EQLIB_OBJECT EQ_Spell::EQ_Spell(char *);
 EQLIB_OBJECT bool EQ_Spell::IsStackableDot(void)const;
+#ifdef EQ_Spell__IsStackable_x
 EQLIB_OBJECT bool EQ_Spell::IsStackable(void) const;
+#else
+EQLIB_OBJECT bool EQ_Spell::IsStackable(void) const
+{
+	if (((PSPELL)this)->NotStackableDot)
+	{
+		return false;
+	}
+	else if (((PSPELL)this)->SpellType != 0 )
+	{
+		return false;
+	}
+	else if (((PSPELL)this)->DurationType == 0 )
+	{
+		return false;
+	}
+	return SpellAffects(SPA_HP) != 0 || SpellAffects(SPA_GRAVITATE) != 0;
+}
+#endif
 EQLIB_OBJECT int EQ_Spell::IsPermIllusionSpell(void)const;
 EQLIB_OBJECT int EQ_Spell::SpellUsesDragonBreathEffect(void);
 EQLIB_OBJECT unsigned char EQ_Spell::SpellAffects(int)const;//this one takes an attrib(soe calls it affect) and returns the index for it...
 EQLIB_OBJECT unsigned char EQ_Spell::GetSpellLevelNeeded(int)const;//takes a Class, druid for example is 6
 EQLIB_OBJECT int EQ_Spell::SpellAffectBase(int)const;//takes a SPA, returns the first matching base it finds for it
 EQLIB_OBJECT const PSPELLCALCINFO EQ_Spell::GetSpellAffectBySlot(int Slot) const;
+EQLIB_OBJECT bool EQ_Spell::IsLullSpell(void) const;
 #if !defined(ROF2EMU) && !defined(UFEMU)
 EQLIB_OBJECT const PSPELLCALCINFO EQ_Spell::GetSpellAffectByIndex(int Index) const;
 #endif
-EQLIB_OBJECT bool EQ_Spell::IsNoRemove(void)const;
+#ifdef EQ_Spell__IsNoRemove_x
+EQLIB_OBJECT bool EQ_Spell::IsNoRemove(void) const;
+inline bool IsDetrimentalSpell() const
+{
+	return (Data.SpellType == 0);
+}
+#else
+EQLIB_OBJECT bool EQ_Spell::IsBeneficialSpellUsedDetrimentally() const
+{
+	const PSPELLCALCINFO pSpellAffect = GetSpellAffectByIndex(0);
+	return pSpellAffect->Attrib == SPA_CLEAR_NPC_TARGETLIST || pSpellAffect->Attrib == SPA_NPC_REACTION_RATING ||
+		   pSpellAffect->Attrib == SPA_NPC_FACTION || pSpellAffect->Attrib == SPA_CANCEL_MAGIC || IsLullSpell();
+}
+EQLIB_OBJECT bool EQ_Spell::IsNoRemove(void) const
+{
+	return !(((PSPELL)this)->SpellType >= 1) || ((PSPELL)this)->NoRemove;
+}
+EQLIB_OBJECT bool EQ_Spell::IsDetrimentalSpell() const
+{
+	return (!(((PSPELL)this)->SpellType >= 1) || IsBeneficialSpellUsedDetrimentally());
+}
+#endif
 EQLIB_OBJECT static bool EQ_Spell::IsDegeneratingLevelMod(int);
 
 EQLIB_OBJECT static bool EQ_Spell::IsSPAStacking(int Spa);
@@ -8335,10 +8478,6 @@ inline int GetNoOverwrite() const
 inline bool IsBeneficialSpell() const
 {
 	return (Data.SpellType >= 1);
-}
-inline bool IsDetrimentalSpell() const
-{
-	return (Data.SpellType == 0);
 }
 inline bool IsShortEffectDuration() const 
 {
@@ -8826,12 +8965,14 @@ class CGroupMemberBase
 	//has a vftable
 public:
 	/*0x00*/ void   *vftable;
-	PCXSTR	Name;
-	short	Type;
-	PCXSTR	OwnerName;
-	int		Level;
-	bool	bIsOffline;
+	/*0x04*/ PCXSTR	Name;
+	/*0x08*/ short	Type;
+	/*0x0C*/ PCXSTR	OwnerName;
+	/*0x10*/ int		Level;
+	/*0x14*/ bool	bIsOffline;
+	#if !defined(ROF2EMU) && !defined(UFEMU)
 	UINT UniquePlayerID;
+	#endif
 	bool bRoleStates[6];
 	UINT CurrentRoleBits;
 	UINT OnlineTimestamp;
@@ -8993,15 +9134,14 @@ public:
 /*0x1174*/ CCapsule	StaticCollision;//size 0x1c
 /*0x1190*/ ArrayClass_RO<PhysicsEffect> mPhysicsEffects;//size is 0x10
 /*0x11a0*/ ArrayClass_RO<bool> PhysicsEffectsUpdated;//size is 0x10
-#if !defined(UFEMU)
-EQLIB_OBJECT int PlayerZoneClient::LegalPlayerRace(int race);
-#else
-//this function doesnt exist in the emu build, so well... im adding it i guess...
+//this function was changed in test exe dated july 7 2020 and I need it to take race as a parameter.
+//so here it is instead.
+EQLIB_OBJECT bool PlayerZoneClient::LegalPlayerRace();
 EQLIB_OBJECT int PlayerZoneClient::LegalPlayerRace(int race)
 {
 	if (race == -1)
 	{
-		race = this->mActorClient.Race;
+		race = ((PSPAWNINFO)this)->GetRace();
 	}
 	if((race <= EQR_GNOME) || (race == EQR_IKSAR) || (race == EQR_VAHSHIR) || (race == EQR_FROGLOCK) || (race == EQR_DRAKKIN))
 	{
@@ -9009,7 +9149,6 @@ EQLIB_OBJECT int PlayerZoneClient::LegalPlayerRace(int race)
 	}
 	return 0;
 }
-#endif
 
 };
 //this is what we call EQPlayer maybe i should just rename that one but too late now?
@@ -9148,6 +9287,10 @@ EQLIB_OBJECT PcClient * PlayerClient::GetPcClient(void)const;//call this using p
 inline signed int GetClass()
 {
 	return mActorClient.Class;
+}
+inline signed int GetRace()
+{
+	return mActorClient.Race;
 }
 inline BYTE GetCharacterType()
 {
@@ -9402,7 +9545,7 @@ EQLIB_OBJECT int CharacterZoneClient::GetItemCountWorn(int);
 EQLIB_OBJECT int CharacterZoneClient::GetItemCountInInventory(int);
 EQLIB_OBJECT int CharacterZoneClient::GetCursorItemCount(int);
 EQLIB_OBJECT bool CharacterZoneClient::HasSkill(int);
-EQLIB_OBJECT EQ_Affect *CharacterZoneClient::FindAffectSlot(int SpellID, PSPAWNINFO Caster, int *slindex, bool bJustTest, int CasterLevel = -1, EQ_Affect* BuffArray = NULL, int BuffArraySize = 0, bool bFailAltAbilities = true);
+EQLIB_OBJECT EQ_Affect *CharacterZoneClient::FindAffectSlot(int SpellID, PSPAWNINFO Caster, int *slindex, bool bJustTest, int CasterLevel = -1, EQ_Affect* BuffArray = NULL, int BuffArraySize = 0);
 EQLIB_OBJECT EQ_Affect *CharacterZoneClient::FindAffectSlotMine(int SpellID, PSPAWNINFO Caster, int *slindex, bool bJustTest, int CasterLevel = -1, EQ_Affect* BuffArray = NULL, int BuffArraySize = 0, bool bFailAltAbilities = true);
 #if !defined(ROF2EMU) && !defined(UFEMU)
 EQLIB_OBJECT bool CharacterZoneClient::IsStackBlocked(const EQ_Spell *pSpell, PSPAWNINFO pCaster, EQ_Affect* pEffecs = NULL, int EffectsSize = 0, bool bMessageOn = false);
@@ -11155,29 +11298,31 @@ public:
 //see 8D35C1 in may 10 2018 -eqmule
 //see 8E87D1 in Apr 15 2019 -eqmule
 //see 8FD4C1 in Jan 06 2020 test -eqmule
+//see 8F1051 in Dec 05 2020 Live -eqmule
 #if defined(ROF2EMU)
 //see 7FEC8D in Rof2 -eqmule
 #define ZONE_COUNT 768
 #else
-#define ZONE_COUNT 837
+#define ZONE_COUNT 843
 #endif
+//Size of ZoneGuideManagerClient is 0x9144 see 6B6915 in Dec 05 2020 Live -eqmule
 class ZoneGuideManagerBase
 {
 public:
 #if defined(ROF2EMU)
 /*0x0000*/ PVOID vfTable;
-/*0x0004*/ ZoneGuideZone Zones[ZONE_COUNT];//0x2c * 0x300
+/*0x0004*/ ZoneGuideZone Zones[ZONE_COUNT];//0x2c * 768
 /*0x8404*/ ArrayClass_RO<ZoneGuideContinent> Continents;
 /*0x8414*/ ArrayClass_RO<ZoneGuideZoneType> ZoneTypes;
 /*0x8424*/ ArrayClass_RO<ZoneGuideTransferType> TransferTypes;
 /*0x8434*/ 
 #else
 /*0x0000*/ PVOID vfTable;
-/*0x0004*/ ZoneGuideZone Zones[ZONE_COUNT];//0x2c * 0x345
-/*0x8FE0*/ ArrayClass_RO<ZoneGuideContinent> Continents;
-/*0x8FF0*/ ArrayClass_RO<ZoneGuideZoneType> ZoneTypes;
-/*0x9000*/ ArrayClass_RO<ZoneGuideTransferType> TransferTypes;
-/*0x9010*/ 
+/*0x0004*/ ZoneGuideZone Zones[ZONE_COUNT];//0x2c * 843
+/*0x90E8*/ ArrayClass_RO<ZoneGuideContinent> Continents;
+/*0x90F8*/ ArrayClass_RO<ZoneGuideZoneType> ZoneTypes;
+/*0x9108*/ ArrayClass_RO<ZoneGuideTransferType> TransferTypes;
+/*0x9118*/ 
 #endif
 };
 typedef struct _ZonePathData

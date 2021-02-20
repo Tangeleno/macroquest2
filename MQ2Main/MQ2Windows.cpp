@@ -118,7 +118,11 @@ bool PickupItemNew(PCONTENTS pCont)
 						{
 							if (CharacterBase* cbase = (CharacterBase*)&pCharInfo->CharacterBase_vftable)
 							{
-								ItemIndex IIndex = cbase->CreateItemIndex(slot1, slot2);
+								ItemGlobalIndex IGIndex = cbase->CreateItemGlobalIndex(slot1, slot2);
+								ItemIndex IIndex;
+								IIndex.Slot1 = IGIndex.Index.Slot1;
+								IIndex.Slot2 = IGIndex.Index.Slot2;
+								IIndex.Slot3 = IGIndex.Index.Slot3;
 								VePointer<CONTENTS> Cont = ((CharacterBase*)cbase)->GetItemPossession(IIndex);
 								if (Cont.pObject != nullptr)
 								{
@@ -253,7 +257,7 @@ public:
 				}
 
 				// lets borrow a checkbox...
-				CControlTemplate* pDisableConnectionTemplate = (CControlTemplate*)pSidlMgr->FindScreenPieceTemplate("OMP_EnablePushToTalkCheckbox");
+				CControlTemplate* pDisableConnectionTemplate = (CControlTemplate*)pSidlMgr->FindScreenPieceTemplate("ATW_Checkbox");
 				if (pDisableConnectionTemplate)
 				{
 					RECT OldRect = pDisableConnectionTemplate->Rect;
@@ -1483,7 +1487,7 @@ void InitializeMQ2Windows()
 {
     DebugSpew("Initializing MQ2 Windows");
 
-	for (int i = 0; i < NUM_INV_SLOTS; i++)
+	for (int i = 0; i < GetCurrentInvSlots(); i++)
 		ItemSlotMap[szItemSlot[i]] = i;
 
 	CHAR szOut[MAX_STRING] = { 0 };
@@ -1852,19 +1856,12 @@ CXWnd* FindMQ2Window(PCHAR WindowName, bool bVisibleOnly /*false*/)
 			unsigned long nPack = atoi(&WindowName[4]);
 		if (nPack && nPack <= NUM_BANK_SLOTS)
 		{
-#ifdef NEWCHARINFO
 			if (pCharData && ((PCHARINFO)pCharData)->BankItems.Items.Size > nPack - 1)
 			{
 					pPack = ((PCHARINFO)pCharData)->BankItems.Items[nPack - 1].pObject;
 			}
-#else
-			if (pCharData && ((PCHARINFO)pCharData)->pBankArray)
-			{
-					pPack = ((PCHARINFO)pCharData)->pBankArray->Bank[nPack - 1];
-				}
-#endif
-			}
 		}
+	}
 	else if (!_strnicmp(WindowName, "pack", 4))
 	{
 			unsigned long nPack = atoi(&WindowName[4]);
@@ -2960,7 +2957,7 @@ int ItemNotify(int argc, char *argv[])
 		{
 			// pSlot was not found (so bag is closed) BUT we can "click" it anyway with moveitem
 			// so lets just do that if pNotification is leftmoseup
-			if (invslot < 0 || invslot > NUM_INV_SLOTS)
+			if (invslot < 0 || invslot > GetCurrentInvSlots())
 			{
 				WriteChatf("%d is not a valid invslot. (itemnotify)", invslot);
 				RETURN(0);
@@ -3034,12 +3031,12 @@ int ItemNotify(int argc, char *argv[])
 	{
 		// user didnt specify "in" so it should be outside a container
 		// OR it's an item, either way we can "click" it -eqmule
-		unsigned long Slot = atoi(szArg1);
+		int Slot = atoi(szArg1);
 		if (Slot == 0)
 		{
 			_strlwr_s(szArg1);
 			Slot = ItemSlotMap[szArg1];
-			if (Slot < NUM_INV_SLOTS && pInvSlotMgr)
+			if (Slot < GetCurrentInvSlots() && pInvSlotMgr)
 			{
 				DebugTry(pSlot = (EQINVSLOT*)pInvSlotMgr->FindInvSlot(Slot));
 			}

@@ -1041,6 +1041,25 @@ bool MQ2MacroType::GETMEMBER()
 			return true;
 		}
 		break;
+	case FindVariable:
+		if (!ISINDEX())
+			return false;
+		if (PCHAR pIndex = GETFIRST())
+		{
+			bool bExact = false;
+			if (*pIndex == '=') {
+				bExact = true;
+				pIndex++;
+			}
+			Dest.Type = pStringType;
+			if (PDATAVAR DataVar = FindMQ2DataVariable(pIndex, bExact))
+			{
+				strcpy_s(DataTypeTemp, DataVar->szName);
+				Dest.Ptr = &DataTypeTemp[0];
+				return true;
+			}
+		}
+		break;
 	case MemUse:
 		Dest.DWord = 0;
 		Dest.Type = pIntType;
@@ -2203,6 +2222,25 @@ bool MQ2SpawnType::GETMEMBER()
         sv3.X = pSpawn->Y;
         sv3.Y = pSpawn->X;
         sv3.Z = pSpawn->Z;
+		PZONEINFO pZone = reinterpret_cast<PZONEINFO>(pZoneInfo);
+        CDisplay *pDsp = reinterpret_cast<CDisplay*>(pDisplay);
+		if (pZone && pDsp) {
+			float Z = 0;
+			FLOAT curr_z = 0.0f;
+			for (float f = pZone->Ceiling; f > pZone->Floor; f -= 1.0f)
+			{
+				curr_z = pDsp->GetFloorHeight(X, Y, f);
+				if (curr_z != ((float)-1.0e27))
+				{
+					Z = curr_z;
+					break;
+				}
+			}
+			if (Z)
+			{
+				sv3.Z = Z;
+			}
+		}
         Dest.DWord = pCharSpawn->CanSee(&sv3);
         Dest.Type = pBoolType;
         return true;
@@ -3607,13 +3645,8 @@ bool MQ2CharacterType::GETMEMBER()
 					return false;
 				if (nSlot<NUM_BANK_SLOTS)
 				{
-#ifdef NEWCHARINFO
 					if (pChar && pChar->BankItems.Items.Size > (UINT)nSlot) {
 						if (Dest.Ptr = pChar->BankItems.Items[nSlot].pObject)
-#else
-					if (pChar && pChar->pBankArray) {
-						if (Dest.Ptr = pChar->pBankArray->Bank[nSlot])
-#endif
 						{
 							return true;
 						}
@@ -3623,13 +3656,8 @@ bool MQ2CharacterType::GETMEMBER()
 					nSlot -= NUM_BANK_SLOTS;
 					if (nSlot<NUM_SHAREDBANK_SLOTS)
 					{
-#ifdef NEWCHARINFO
 						if (pChar && pChar->SharedBankItems.Items.Size > (UINT)nSlot) {
 							if (Dest.Ptr = pChar->SharedBankItems.Items[nSlot].pObject)
-#else
-						if (pChar && pChar->pSharedBankArray) {
-							if (Dest.Ptr = pChar->pSharedBankArray->SharedBank[nSlot])
-#endif
 							{
 								return true;
 							}
@@ -3755,7 +3783,9 @@ bool MQ2CharacterType::GETMEMBER()
 		return true;
 	case Grouped:
 		Dest.Type = pBoolType;
-		if (!pChar->pGroupInfo) return false;
+		Dest.DWord = 0;
+		if (!pChar->pGroupInfo)
+			return true;
 		Dest.DWord = pChar->pGroupInfo->pMember[1] ||
 			pChar->pGroupInfo->pMember[2] ||
 			pChar->pGroupInfo->pMember[3] ||
@@ -4709,7 +4739,7 @@ bool MQ2CharacterType::GETMEMBER()
 		Dest.Type = pIntType;
 		if (PCHARINFO2 pChar2 = GetCharInfo2()) {
 			if (pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray) {
-				for (DWORD slot = BAG_SLOT_START; slot<NUM_INV_SLOTS; slot++)
+				for (int slot = BAG_SLOT_START; slot < GetCurrentInvSlots(); slot++)
 				{
 					if (PCONTENTS pItem = pChar2->pInventoryArray->InventoryArray[slot])
 					{
@@ -6804,6 +6834,26 @@ bool MQ2CharacterType::GETMEMBER()
 		Dest.DWord = pPlayerPointManager->GetAltCurrency(ALTCURRENCY_OVERSEERTETRADRACHM);
 		Dest.Type = pIntType;
 		return true;
+	case WarforgedEmblem://317
+		Dest.DWord = pPlayerPointManager->GetAltCurrency(ALTCURRENCY_WARFORGEDEMBLEM);
+		Dest.Type = pIntType;
+		return true;
+	case RestlessMark://318
+		Dest.DWord = pPlayerPointManager->GetAltCurrency(ALTCURRENCY_RESTLESSMARK);
+		Dest.Type = pIntType;
+		return true;
+	case CastTimeLeft:
+	{
+		Dest.Int64 = 0;
+		Dest.Type = pTimeStampType;
+		int spelleta = ((PSPAWNINFO)pLocalPlayer)->CastingData.SpellETA;
+		if (spelleta > 0) {
+			Dest.Int64 = ((PSPAWNINFO)pLocalPlayer)->CastingData.SpellETA - ((PSPAWNINFO)pLocalPlayer)->TimeStamp;
+			if (Dest.Int64 < 0)
+				Dest.Int64 = 0;
+		}
+		return true;
+	}
 	}
 
 
@@ -7097,7 +7147,7 @@ bool MQ2SpellType::GETMEMBER()
 			if (pCZC)
 			{
 				int SlotIndex = -1;
-				EQ_Affect*ret = pCZC->FindAffectSlot(thespell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, NULL, 0, true);
+				EQ_Affect*ret = pCZC->FindAffectSlot(thespell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, NULL, 0);
 				if (!ret || SlotIndex==-1)
 					Dest.DWord = false;
 				else
@@ -7144,8 +7194,7 @@ bool MQ2SpellType::GETMEMBER()
 				eff.Type = 2;
 				eff.Modifier = 1.0;
 				int SlotIndex = -1;
-
-				EQ_Affect*ret = pCZC->FindAffectSlot(thespell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, &eff, 1, false);
+				EQ_Affect*ret = pCZC->FindAffectSlot(thespell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, &eff, 1);
 				//call below is correct but it always seem to return false when we feed it a &eff so i don't
 				//think its useful here... also the call above calls it for us...
 				//Dest.DWord = pCZC->IsStackBlocked((EQ_Spell*)thespell, (PSPAWNINFO)pLocalPlayer, &eff, 1);
@@ -7204,7 +7253,7 @@ bool MQ2SpellType::GETMEMBER()
 					}
 				}
 				int SlotIndex = -1;
-				EQ_Affect*ret = pCZC->FindAffectSlot(pSpell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, pAffects, j, false);
+				EQ_Affect*ret = pCZC->FindAffectSlot(pSpell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, pAffects, j);
 				if (!ret || SlotIndex == -1)
 					Dest.DWord = false;
 				else
@@ -7279,7 +7328,7 @@ bool MQ2SpellType::GETMEMBER()
 							}
 						}
 						int SlotIndex = -1;
-						EQ_Affect*ret = pCZC->FindAffectSlot(pSpell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, pAffects, j, true);
+						EQ_Affect*ret = pCZC->FindAffectSlot(pSpell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, pAffects, j);
 						if (!ret || SlotIndex == -1)
 							Dest.DWord = false;
 						else
@@ -7329,7 +7378,7 @@ bool MQ2SpellType::GETMEMBER()
 							}
 						}
 						int SlotIndex = -1;
-						EQ_Affect*ret = pCZC->FindAffectSlot(pSpell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, pAffects, j, false);
+						EQ_Affect*ret = pCZC->FindAffectSlot(pSpell->ID, (PSPAWNINFO)pLocalPlayer, &SlotIndex, true, ((PSPAWNINFO)pLocalPlayer)->Level, pAffects, j);
 						if (!ret || SlotIndex == -1)
 							Dest.DWord = false;
 						else
@@ -7571,7 +7620,13 @@ bool MQ2SpellType::GETMEMBER()
 		Dest.Type = pIntType;
 		return true;
 	case Target:
+		//todo add at some point maybe
+		//GetActorTagFromID(DataTypeTemp,pSpell->ActorTagId);
+#if defined(ROF2EMU) || defined(UFEMU)
 		strcpy_s(DataTypeTemp, pSpell->Target);
+#else
+		_itoa_s(pSpell->ActorTagId, DataTypeTemp, 10);
+#endif
 		Dest.Ptr = &DataTypeTemp[0];
 		Dest.Type = pStringType;
 		return true;
@@ -8409,7 +8464,7 @@ bool MQ2ItemType::GETMEMBER()
 		if (PCHARINFO2 pChar2 = GetCharInfo2()) {
 			if (!((EQ_Item*)pItem)->IsStackable())
 				return true;
-			for (DWORD slot = BAG_SLOT_START; slot < NUM_INV_SLOTS; slot++)
+			for (int slot = BAG_SLOT_START; slot < GetCurrentInvSlots(); slot++)
 			{
 				if (pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray[slot]) {
 					if (PCONTENTS pTempItem = pChar2->pInventoryArray->InventoryArray[slot])
@@ -8447,7 +8502,7 @@ bool MQ2ItemType::GETMEMBER()
 		if (PCHARINFO2 pChar2 = GetCharInfo2()) {
 			if (!((EQ_Item*)pItem)->IsStackable())
 				return true;
-			for (DWORD slot = BAG_SLOT_START; slot < NUM_INV_SLOTS; slot++)
+			for (int slot = BAG_SLOT_START; slot < GetCurrentInvSlots(); slot++)
 			{
 				if (pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray[slot]) {
 					if (PCONTENTS pTempItem = pChar2->pInventoryArray->InventoryArray[slot])
@@ -9343,6 +9398,14 @@ bool MQ2ItemType::GETMEMBER()
 		return true;
 	case ItemLink:
 		Dest.Type = pStringType;
+		if (ISINDEX()) {
+			if (!_stricmp(GETFIRST(), "CLICKABLE")) {
+				if (GetItemLink(pItem, DataTypeTemp)) {
+					Dest.Ptr = &DataTypeTemp[0];
+					return true;
+				}
+			}
+		}
 		if (GetItemLink(pItem, DataTypeTemp, FALSE)) {
 			Dest.Ptr = &DataTypeTemp[0];
 			return true;
@@ -9468,7 +9531,60 @@ bool MQ2WindowType::GETMEMBER()
 					return true;
 				}
 			}
+			break;
 		}
+		case Move:
+			if (ISINDEX())
+			{
+				if (PCHAR Args = GETFIRST())
+				{
+					CHAR szLeft[MAX_STRING] = { 0 };
+					CHAR szTop[MAX_STRING] = { 0 };
+					CHAR szWidth[MAX_STRING] = { 0 };
+					CHAR szHeight[MAX_STRING] = { 0 };
+					GetArg(szLeft, Args, 1,0,0,0,',');
+					GetArg(szTop, Args, 2,0,0,0,',');
+					GetArg(szWidth, Args, 3,0,0,0,',');
+					GetArg(szHeight, Args, 4,0,0,0,',');
+					RECT OrgLoc = ((CXWnd*)thewindow)->GetLocation();
+					CXRect rc = { OrgLoc.left,OrgLoc.top,OrgLoc.right,OrgLoc.bottom };
+					if(szLeft[0])
+						rc.left = atoi(szLeft);
+					if(szTop[0])
+						rc.top = atoi(szTop);
+					if(szWidth[0])
+						rc.right = rc.left + atoi(szWidth);
+					if(szHeight[0])
+						rc.bottom = rc.top + atoi(szHeight);
+						
+					((CXWnd*)thewindow)->Move(rc, true, true, true, true);
+				}
+			}
+			return true;
+		case SetBGColor:
+			if (ISINDEX())
+			{
+				DWORD Color = _httoi_s(GETFIRST(), strlen(GETFIRST()));
+				((CXWnd*)thewindow)->SetBGColor(Color);
+				((CXWnd*)thewindow)->Refade();
+			}
+			return true;
+		case SetAlpha:
+			if (ISINDEX())
+			{
+				DWORD Alpha = _httoi_s(GETFIRST(), strlen(GETFIRST()));
+				((CXWnd*)thewindow)->SetAlpha((BYTE)Alpha);
+				((CXWnd*)thewindow)->Refade();
+			}
+			return true;
+		case SetFadeAlpha:
+			if (ISINDEX())
+			{
+				DWORD Alpha = _httoi_s(GETFIRST(), strlen(GETFIRST()));
+				((CXWnd*)thewindow)->SetFadeToAlpha((BYTE)Alpha);
+				((CXWnd*)thewindow)->Refade();
+			}
+			return true;
 		}
 		return false;
 	}
@@ -9590,7 +9706,7 @@ bool MQ2WindowType::GETMEMBER()
 	case Text:
 		if (((CXWnd*)pWnd)->GetType() == UI_STMLBox) {
 			CStmlWnd*cstmlwnd = (CStmlWnd*)pWnd;
-			GetCXStr(cstmlwnd->STMLText, DataTypeTemp, MAX_STRING);
+			GetCXStr(cstmlwnd->GetSTMLText().Ptr, DataTypeTemp, MAX_STRING);
 		}
 		else {
 			GetCXStr(pWnd->CGetWindowText(), DataTypeTemp, MAX_STRING);
@@ -12594,7 +12710,7 @@ bool MQ2InvSlotType::GETMEMBER()
 		Dest.Type = pItemType;
 		if (PCHARINFO2 pChar2 = GetCharInfo2()) {
 			if (pChar2->pInventoryArray && nInvSlot >= 0) {
-				if (nInvSlot < NUM_INV_SLOTS)
+				if (nInvSlot < (int)GetCurrentInvSlots())
 				{
 					if (Dest.Ptr = pChar2->pInventoryArray->InventoryArray[nInvSlot])
 					{
@@ -12623,12 +12739,8 @@ bool MQ2InvSlotType::GETMEMBER()
 							unsigned long nPack = (nInvSlot - 2032) / 10;
 							unsigned long nSlot = (nInvSlot - 2) % 10;
 							PCONTENTS pPack = NULL;
-#ifdef NEWCHARINFO
 							if (pCharInfo && pCharInfo->BankItems.Items.Size > nPack)
 								pPack = pCharInfo->BankItems.Items[nPack].pObject;
-#else
-							if (pCharInfo && pCharInfo->pBankArray) pPack = pCharInfo->pBankArray->Bank[nPack];
-#endif
 							if (pPack)
 								if (GetItemFromContents(pPack)->Type == ITEMTYPE_PACK && nSlot < GetItemFromContents(pPack)->Slots)
 								{
@@ -12644,12 +12756,8 @@ bool MQ2InvSlotType::GETMEMBER()
 							unsigned long nPack = 23 + ((nInvSlot - 2532) / 10);
 							unsigned long nSlot = (nInvSlot - 2) % 10;
 							PCONTENTS pPack = NULL;
-#ifdef NEWCHARINFO
 							if (pCharInfo && pCharInfo->BankItems.Items.Size > nPack)
 								pPack = pCharInfo->BankItems.Items[nPack].pObject;
-#else
-							if (pCharInfo && pCharInfo->pBankArray) pPack = pCharInfo->pBankArray->Bank[nPack];
-#endif
 							if (pPack)
 								if (GetItemFromContents(pPack)->Type == ITEMTYPE_PACK && nSlot < GetItemFromContents(pPack)->Slots)
 								{
@@ -12662,13 +12770,8 @@ bool MQ2InvSlotType::GETMEMBER()
 						}
 						else if (nInvSlot >= 2000 && nInvSlot < 2024)
 						{
-#ifdef NEWCHARINFO
 							if (pCharInfo && pCharInfo->BankItems.Items.Size > (UINT)nInvSlot - 2000) {
 								if (Dest.Ptr = pCharInfo->BankItems.Items[nInvSlot - 2000].pObject)
-#else
-							if (pCharInfo && pCharInfo->pBankArray) {
-								if (Dest.Ptr = pCharInfo->pBankArray->Bank[nInvSlot - 2000])
-#endif
 								{
 									return true;
 								}
@@ -12676,13 +12779,8 @@ bool MQ2InvSlotType::GETMEMBER()
 						}
 						else if (nInvSlot == 2500 || nInvSlot == 2501)
 						{
-#ifdef NEWCHARINFO
 							if (pCharInfo && pCharInfo->BankItems.Items.Size > (UINT)nInvSlot - 2500 + 22) {
 								if (Dest.Ptr = pCharInfo->BankItems.Items[nInvSlot - 2500 + 22].pObject)
-#else
-							if (pCharInfo && pCharInfo->pBankArray) {
-								if (Dest.Ptr = pCharInfo->pBankArray->Bank[nInvSlot - 2500 + 22])
-#endif
 									if (Dest.Ptr)
 									{
 										return true;
@@ -12844,13 +12942,13 @@ bool MQ2InvSlotType::GETMEMBER()
 		return false;
 	case Name:
 		Dest.Type = pStringType;
-		if (nInvSlot >= 0 && nInvSlot<NUM_INV_SLOTS)
+		if (nInvSlot >= 0 && nInvSlot<(int)GetCurrentInvSlots())
 		{
 			strcpy_s(DataTypeTemp, szItemSlot[nInvSlot]);
 			Dest.Ptr = &DataTypeTemp[0];
 			return true;
 		}
-		if (nInvSlot >= BAG_SLOT_START && nInvSlot<NUM_INV_SLOTS)
+		if (nInvSlot >= BAG_SLOT_START && nInvSlot<(int)GetCurrentInvSlots())
 		{
 			sprintf_s(DataTypeTemp, "pack%d", nInvSlot - 21);
 			Dest.Ptr = &DataTypeTemp[0];
@@ -13898,17 +13996,75 @@ bool MQ2RaidType::GETMEMBER()
 		}
 		return false;
 	case MainAssist:
+	{
 		Dest.DWord = 0;
 		Dest.Type = pRaidMemberType;
-		for (i = 0; i < 72; i++)
+
+		PCHARINFO pCharInfo = GetCharInfo();
+		if (!pCharInfo)
+			return false;
+
+		CharacterBase* cb = (CharacterBase*)&pCharInfo->CharacterBase_vftable;
+		if (!cb)
+			return false;
+
+		RaidData* rd = &cb->raidData;
+		if (!rd)
+			return false;
+
+		if (ISINDEX())
 		{
-			if (pRaid->RaidMemberUsed[i] && pRaid->RaidMember[i].RaidMainAssist)
+			if (ISNUMBER())
 			{
-				Dest.DWord = i + 1;
-				return true;
+				DWORD Count = GETNUMBER();
+				if (Count < 1 || Count > 3)
+					return false;
+
+				//This matches what EQ says the RA at this index is.
+				char* RAName = rd->MainAssistNames[Count - 1];
+				if (!strlen(RAName))
+					return false;
+
+				for (int nMember = 0; nMember < 72; nMember++)
+				{
+					if (pRaid->RaidMemberUsed[nMember] && pRaid->RaidMember[nMember].RaidMainAssist)
+					{
+						if (!strcmp(pRaid->RaidMember[nMember].Name, RAName))
+						{
+							Dest.DWord = nMember + 1;
+							return true;
+						}
+					}
+				}
+			}
+			else
+			{
+				// by name
+				for (DWORD nMember = 0; nMember < 72; nMember++)
+				{
+					if (pRaid->RaidMemberUsed[nMember] && pRaid->RaidMember[nMember].RaidMainAssist)
+					{
+						if (!_stricmp(pRaid->RaidMember[nMember].Name, GETFIRST()))
+						{
+							Dest.DWord = nMember + 1;
+							return true;
+						}
+					}
+				}
+			}
+		}
+		else {//no index provided. return first RA found.
+			for (i = 0; i < 72; i++)
+			{
+				if (pRaid->RaidMemberUsed[i] && pRaid->RaidMember[i].RaidMainAssist)
+				{
+					Dest.DWord = i + 1;
+					return true;
+				}
 			}
 		}
 		return false;
+	}
 #if !defined(ROF2EMU) && !defined(UFEMU)
 	case MasterLooter:
 		Dest.DWord = 0;
@@ -13919,6 +14075,58 @@ bool MQ2RaidType::GETMEMBER()
 			{
 				Dest.DWord = i + 1;
 				return true;
+			}
+		}
+		return false;
+	case MarkNPC:
+		Dest.DWord = 0;
+		Dest.Type = pRaidMemberType;
+
+		if (ISINDEX())
+		{
+			if (ISNUMBER())
+			{
+				DWORD Count = GETNUMBER();
+				if (Count < 1 || Count > 3)
+					return false;
+
+				for (int nMember = 0; nMember < 72; nMember++)
+				{
+					if (pRaid->RaidMemberUsed[nMember] && pRaid->RaidMember[nMember].RaidMarker)
+					{
+						Count--;
+						if (Count)
+							continue;
+
+						Dest.DWord = nMember + 1;
+						return true;
+					}
+				}
+			}
+			else
+			{
+				// by name
+				for (DWORD nMember = 0; nMember < 72; nMember++)
+				{
+					if (pRaid->RaidMemberUsed[nMember] && pRaid->RaidMember[nMember].RaidMarker)
+					{
+						if (!_stricmp(pRaid->RaidMember[nMember].Name, GETFIRST()))
+						{
+							Dest.DWord = nMember + 1;
+							return true;
+						}
+					}
+				}
+			}
+		}
+		else {//no index provided. return first RA found.
+			for (i = 0; i < 72; i++)
+			{
+				if (pRaid->RaidMemberUsed[i] && pRaid->RaidMember[i].RaidMarker)
+				{
+					Dest.DWord = i + 1;
+					return true;
+				}
 			}
 		}
 		return false;
@@ -14319,6 +14527,23 @@ bool MQ2FellowshipType::GETMEMBER()
 		Dest.Int = ((PSPAWNINFO)pLocalPlayer)->Campfire;
 		Dest.Type = pBoolType;
 		return true;
+	case Sharing:
+		if (ISINDEX())
+		{
+			if (ISNUMBER())
+			{
+				int i = GETNUMBER();
+				i--;
+				if (i < 0)
+					i = 0;
+				if (i > pFellowship->Members)
+					return false;
+				Dest.DWord = pFellowship->bExpSharingEnabled[i];
+				Dest.Type = pBoolType;
+				return true;
+			}
+		}
+		return false;
 	}
 	return false;
 }
@@ -15823,7 +16048,9 @@ bool MQ2TaskType::GETMEMBER()
 
 bool MQ2XTargetType::GETMEMBER()
 {
-	if (!GetCharInfo() || !GetCharInfo()->pXTargetMgr || VarPtr.DWord>23)
+	if (!GetCharInfo() || !GetCharInfo()->pXTargetMgr || VarPtr.DWord > 23)
+		return false;
+	if (VarPtr.DWord > (DWORD)GetCharInfo()->pXTargetMgr->XTargetSlots.Count)
 		return false;
 	if (PMQ2TYPEMEMBER pMember = MQ2XTargetType::FindMember(Member))
 	{
@@ -16961,7 +17188,7 @@ bool MQ2BandolierType::GETMEMBER()
 					case Active:
 						Dest.DWord = 0;
 						Dest.Type = pBoolType;
-						if (pChar2->pInventoryArray && pChar2->pInventoryArray->InventoryArray[0])
+						if (pChar2->pInventoryArray)
 						{
 							if (pBand->Items[0].ItemID)
 							{
