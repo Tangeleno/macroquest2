@@ -311,21 +311,38 @@ bool MQ2TangBotType::GETMEMBER() {
 			break;
 		}
 		case FindXTarget:
-			//Loop through XTargets and return an npc in the camp
+			{
+				//Loop through XTargets and return an npc in the camp
 			Dest.DWord = 0;
 			Dest.Type = pSpawnType;
-			if (const auto *xtm = GetCharInfo()->pXTargetMgr)
+			auto* const charInfo = GetCharInfo();
+			if (const auto *xtm = charInfo->pXTargetMgr)
 			{
 				if (xtm->XTargetSlots.Count)
 				{
-					for (int i = 0; i < xtm->XTargetSlots.Count; i++)
+					for (auto i = 0; i < xtm->XTargetSlots.Count; i++)
 					{
 						const auto xTarget = xtm->XTargetSlots[i];
 						if (xTarget.xTargetType && xTarget.XTargetSlotStatus) {
-							if (char* ptr = GetXtargetType(xTarget.xTargetType)) {
+							if (auto* const ptr = GetXtargetType(xTarget.xTargetType)) {
 								if (!strcmp(ptr, "Auto Hater")) {
 									if (auto* const pSpawn = reinterpret_cast<PSPAWNINFO>(GetSpawnByID(xTarget.SpawnID))) {
-										if (Distance(_campX, _campY, pSpawn->X, pSpawn->Y) <= GetCampRadius(pSpawn) && LineOfSight(GetCharInfo()->pSpawn, pSpawn)) {
+										auto isGroupMark = false;
+										for (auto g : charInfo->pSpawn->GroupMarkNPC)
+										{
+											if(g == pSpawn->GetId()) 
+											{
+												isGroupMark = true;
+												break;
+											}
+										}
+										
+										if(isGroupMark)
+										{
+											continue;
+										}
+										
+										if (Distance(_campX, _campY, pSpawn->X, pSpawn->Y) <= GetCampRadius(pSpawn) && LineOfSight(charInfo->pSpawn, pSpawn)) {
 											Dest.Ptr = pSpawn;
 											Dest.Type = pSpawnType;
 											break;
@@ -338,6 +355,7 @@ bool MQ2TangBotType::GETMEMBER() {
 				}
 			}
 			break;
+			}
 		case SpawnInXTarget:
 		{
 			if (!ISINDEX() || !ISNUMBER()) {

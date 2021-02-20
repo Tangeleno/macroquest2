@@ -116,6 +116,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Twist", "MQ2Twist\MQ2Twi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Js", "MQ2Js\MQ2Js.vcxproj", "{563680F5-FEB5-47FD-8D70-D1688F009CAE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Relay", "MQ2Relay\MQ2Relay.vcxproj", "{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -297,6 +299,12 @@ Global
 		{563680F5-FEB5-47FD-8D70-D1688F009CAE}.Release|Win32.Build.0 = Release|Win32
 		{563680F5-FEB5-47FD-8D70-D1688F009CAE}.xDebug|Win32.ActiveCfg = Debug|Win32
 		{563680F5-FEB5-47FD-8D70-D1688F009CAE}.xDebug|Win32.Build.0 = Debug|Win32
+		{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}.Debug|Win32.Build.0 = Debug|Win32
+		{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}.Release|Win32.ActiveCfg = Release|Win32
+		{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}.Release|Win32.Build.0 = Release|Win32
+		{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}.xDebug|Win32.ActiveCfg = Debug|Win32
+		{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}.xDebug|Win32.Build.0 = Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
