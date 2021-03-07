@@ -588,7 +588,14 @@ bool MQ2SpellsType::ConfigureSpells() {
 				switch (spell->Subcategory)
 				{
 				case SpellSubCategories::Heals:
-					spellType = FindHealSpell(spell);
+					//
+					if(strstr(spell->Name, "Remedy"))
+					{
+						FindQuickHealSpell(spell);
+					} else
+					{
+						spellType = FindHealSpell(spell);	
+					}
 					break;
 				case SpellSubCategories::Cure:
 					spellType = FindCureSpell(spell);
@@ -841,6 +848,11 @@ bool MQ2SpellsType::ConfigureSpells() {
 							spellType = "ManaFlare";
 						}
 						break;
+					case EQCharacterClasses::ShadowKnight:
+						if(spell->TargetType == TargetTypes::Self)
+						{
+							spellType = "TapProc";
+						}
 					default:
 						break;
 					}
@@ -855,6 +867,12 @@ bool MQ2SpellsType::ConfigureSpells() {
 						spellType = "SelfSpellGuard";
 					else
 						spellType = "GroupSpellGuard";
+					break;
+				case SpellSubCategories::Visages:
+					if(spell->TargetType == TargetTypes::Single && characterClass == EQCharacterClasses::ShadowKnight)
+					{
+						spellType = "AggroVisage";
+					}
 					break;
 				case SpellSubCategories::Misc:
 					switch (characterClass)
@@ -1067,7 +1085,7 @@ bool MQ2SpellsType::ConfigureSpells() {
 					spellType = "SwarmPet";
 					break;
 				case SpellSubCategories::PetMiscBuffs:
-					if (strstr(spell->Name, "Iceflame"))
+					if (strstr(spell->Name, "Iceflame") || strncmp("Spirit of ",spell->Name,10) == 0)
 						spellType = "PetProc";
 					break;
 				case SpellSubCategories::SumAnimation:

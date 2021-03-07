@@ -115,8 +115,19 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Twist", "MQ2Twist\MQ2Twi
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Js", "MQ2Js\MQ2Js.vcxproj", "{563680F5-FEB5-47FD-8D70-D1688F009CAE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221} = {2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Relay", "MQ2Relay\MQ2Relay.vcxproj", "{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221} = {2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Feedme", "MQ2Feedme\MQ2Feedme.vcxproj", "{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221} = {2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -305,6 +316,12 @@ Global
 		{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}.Release|Win32.Build.0 = Release|Win32
 		{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}.xDebug|Win32.ActiveCfg = Debug|Win32
 		{4DC565CD-BF64-4D29-A34D-E28F5A3ACE11}.xDebug|Win32.Build.0 = Debug|Win32
+		{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}.Debug|Win32.Build.0 = Debug|Win32
+		{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}.Release|Win32.ActiveCfg = Release|Win32
+		{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}.Release|Win32.Build.0 = Release|Win32
+		{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}.xDebug|Win32.ActiveCfg = Debug|Win32
+		{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}.xDebug|Win32.Build.0 = Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
