@@ -568,6 +568,7 @@ void MQ2SpellsType::SetAxes(PSPAWNINFO pSpawn, const std::string& spellType, std
 
 
 bool MQ2SpellsType::ConfigureSpells() {
+	Spells.clear();
 	auto* pSpawn = GetCharInfo()->pSpawn;
 	int characterClass = GetCharInfo()->pSpawn->mActorClient.Class;
 	if (!ClassInfo[characterClass].PureCaster) {
