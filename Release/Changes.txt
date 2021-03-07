@@ -1,5 +1,32 @@
+Mar 04 2021
+- Fixed the SPELL struct this should fix a bunch of misc bugs.
+- Updated for TEST
+-
+Mar 03 2021
+- Updated for TEST
+-
+Feb 27 2021
+- Added pMarketplaceWnd and pPurchaseGroupWnd
+-
+Feb 27 2021
+- Added sorting capability to the /buyer buy lines list - Feature suggestion: Ladon
+- Added sorting capability to the /barter inventory list
+- Added a Value column to the /barter inventory list so we can sort by merchant value.
+- Added Rightclick on item feature to /barter inventory list so it opens up the inspect item window on click.
+-
+Feb 25 2021
+- Updated for TEST
+-
+Feb 22 2021
+- Fix for FreeInventory (and other spots where GetCurrentInvSlots() is called) - SwiftyMUSE - Brainiac
+- Everything is using the CHARINFONEW struct now, we will keep it like that for a couple patches then just remove old charinfo.
+- Fixed ${Me.Buff[buff name].Caster} so it works like ${Target.Buff[buff name].Caster} when you have yourself as target
+- Fixed a crash when right clicking fake labels on map
+- Fixed a crash when adding circles to the map using /maploc when pcconcolor was set to 1
+- Fixed a bug in setting mq2chatwnd location after zoning.
+-
 Feb 18 2021
-- Some Label fixes - brainiac/swiftymuse
+- Some Label fixes - brainiac/SwiftyMUSE
 -
 Feb 17 2021
 - Updated for LIVE

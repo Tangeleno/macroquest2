@@ -621,8 +621,10 @@ namespace MQ2Globals
 	EQLIB_VAR CBreathWnd **ppBreathWnd;
 	EQLIB_VAR CMapToolbarWnd **ppMapToolbarWnd;
 	EQLIB_VAR CMapViewWnd **ppMapViewWnd;
+	EQLIB_VAR CMarketplaceWnd **ppMarketplaceWnd;
 	EQLIB_VAR CEditLabelWnd **ppEditLabelWnd;
 	EQLIB_VAR COptionsWnd **ppOptionsWnd;
+	EQLIB_VAR COverseerWnd **ppOverseerWnd;
 	EQLIB_VAR CBuffWindow **ppBuffWindowNORMAL;
 	EQLIB_VAR CBuffWindow **ppBuffWindowSHORT;
 	EQLIB_VAR CTargetWnd **ppTargetWnd;
@@ -630,6 +632,7 @@ namespace MQ2Globals
 	EQLIB_VAR CCombatSkillsSelectWnd **ppCombatSkillsSelectWnd;
 	EQLIB_VAR CHotButtonWnd **ppHotButtonWnd;
 	EQLIB_VAR CPlayerWnd **ppPlayerWnd;
+	EQLIB_VAR CPurchaseGroupWnd **ppPurchaseGroupWnd;
 	EQLIB_VAR CCastingWnd **ppCastingWnd;
 	EQLIB_VAR CCastSpellWnd **ppCastSpellWnd;
 	EQLIB_VAR CSpellBookWnd **ppSpellBookWnd;
@@ -737,8 +740,10 @@ namespace MQ2Globals
 #define pBreathWnd (*ppBreathWnd)
 #define pMapToolbarWnd (*ppMapToolbarWnd)
 #define pMapViewWnd (*ppMapViewWnd)
+#define pMarketplaceWnd (*ppMarketplaceWnd)
 #define pEditLabelWnd (*ppEditLabelWnd)
 #define pOptionsWnd (*ppOptionsWnd)
+#define pOverseerWnd (*ppOverseerWnd)
 #define pBuffWnd (*ppBuffWindowNORMAL)
 #define pSongWnd (*ppBuffWindowSHORT)
 #define pTargetWnd (*ppTargetWnd)
@@ -747,6 +752,7 @@ namespace MQ2Globals
 #define pCombatSkillsSelectWnd (*ppCombatSkillsSelectWnd)
 #define pHotButtonWnd (*ppHotButtonWnd)
 #define pPlayerWnd (*ppPlayerWnd)
+#define pPurchaseGroupWnd (*ppPurchaseGroupWnd)
 #define pCastingWnd (*ppCastingWnd)
 #define pCastSpellWnd (*ppCastSpellWnd)
 #define pSpellBookWnd (*ppSpellBookWnd)
@@ -984,13 +990,16 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD pinstCRaidOptionsWnd;
 	EQLIB_VAR DWORD pinstCBreathWnd;
 	EQLIB_VAR DWORD pinstCMapViewWnd;
+	EQLIB_VAR DWORD pinstCMarketplaceWnd;
 	EQLIB_VAR DWORD pinstCMapToolbarWnd;
 	EQLIB_VAR DWORD pinstCEditLabelWnd;
 	EQLIB_VAR DWORD pinstCTargetWnd;
 	EQLIB_VAR DWORD pinstCColorPickerWnd;
 	EQLIB_VAR DWORD pinstCCombatSkillsSelectWnd;
 	EQLIB_VAR DWORD pinstCPlayerWnd;
+	EQLIB_VAR DWORD pinstCPurchaseGroupWnd;
 	EQLIB_VAR DWORD pinstCOptionsWnd;
+	EQLIB_VAR DWORD pinstCOverseerWnd;
 	EQLIB_VAR DWORD pinstCBuffWindowNORMAL;
 	EQLIB_VAR DWORD pinstCBuffWindowSHORT;
 	EQLIB_VAR DWORD pinstCharacterCreation;
@@ -1167,6 +1176,9 @@ namespace MQ2Globals
 	
 	EQLIB_VAR DWORD CBankWnd__GetNumBankSlots;
 	EQLIB_VAR DWORD CBankWnd__WndNotification;
+	EQLIB_VAR DWORD CBarterSearchWnd__WndNotification;
+	EQLIB_VAR DWORD CBarterSearchWnd__UpdateInventoryList;
+	EQLIB_VAR DWORD CBarterWnd__WndNotification;
 	#if !defined(ROF2EMU) && !defined(UFEMU)
 	EQLIB_VAR DWORD CFindItemWnd__WndNotification;
 	EQLIB_VAR DWORD CFindItemWnd__Update;
@@ -1824,6 +1836,7 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD CLargeDialogWnd__Open;
 	EQLIB_VAR DWORD CWndDisplayManager__FindWindowA;
 	EQLIB_VAR DWORD CItemDisplayManager__CreateWindowInstance;
+	EQLIB_VAR DWORD CItemDisplayManager__ShowItem;
 	EQLIB_VAR DWORD CCursorAttachment__AttachToCursor;
 	EQLIB_VAR DWORD CCursorAttachment__AttachToCursor1;
 	EQLIB_VAR DWORD CCursorAttachment__Deactivate;

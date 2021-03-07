@@ -1565,7 +1565,8 @@ DWORD ConColor(PSPAWNINFO pSpawn)
 	PSPAWNINFO pChar = (PSPAWNINFO)pLocalPlayer;
 	if (!pChar)
 		return CONCOLOR_WHITE; // its you
-
+	if (!pSpawn->vtable)
+		return CONCOLOR_RED;
 	switch (pCharData->GetConLevel((EQPlayer*)pSpawn))
 	{
 	case 0:
@@ -8156,7 +8157,11 @@ void UseAbility(char *sAbility) {
 // Pass exansion macros from EQData.h to it -- e.g. HasExpansion(EXPANSION_RoF)
 bool HasExpansion(DWORD nExpansion)
 {
-	return (bool)((GetCharInfo()->ExpansionFlags & nExpansion) != 0);
+	if (PCHARINFO pChar = GetCharInfo())
+	{
+		return (bool)((pChar->ExpansionFlags & nExpansion) != 0);
+	}
+	return true;
 }
 //Just a Function that needs more work
 //I use this to test merc aa struct -eqmule
@@ -12154,4 +12159,21 @@ void PrettifyNumber(char* string, size_t bufferSize, int decimals /* = 0 */)
 		&fmt,
 		string,
 		bufferSize);
+}
+
+bool TargetBuffCastByMe(const char* pBuffName) {
+	lockit lk(ghCachedBuffsLock);
+	uint32_t buffID = 0;
+	for (const auto& x : targetBuffSlotToCasterMap) {
+		if (!_stricmp(((PSPAWNINFO)pLocalPlayer)->Name, x.second.c_str())) {
+			if (x.first < NUM_BUFF_SLOTS)
+			{
+				buffID = ((PCTARGETWND)pTargetWnd)->BuffSpellID[x.first];
+				if (!_stricmp(GetSpellNameByID(buffID), pBuffName)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }

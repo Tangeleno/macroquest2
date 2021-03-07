@@ -2757,11 +2757,14 @@ bool MQ2BuffType::GETMEMBER()
 	{
 		if (PSPELL pSpell = GetSpellByID(pBuff->SpellID))
 		{
+			MQ2VARPTR pvar = *(MQ2VARPTR*)&pSpell;
+			pvar.HighPart = VarPtr.HighPart;
 #ifndef ISXEQ
-			return pSpellType->GetMember(*(MQ2VARPTR*)&pSpell, Member, Index, Dest);
+			bool bRet = pSpellType->GetMember(pvar, Member, Index, Dest);
 #else
-			return pSpellType->GetMember(*(LSVARPTR*)&pSpell, Member, argc, argv, Dest);
+			bool bRet = pSpellType->GetMember(pvar, Member, argc, argv, Dest);
 #endif
+			return bRet;
 		}
 		return false;
 	}
@@ -6854,6 +6857,10 @@ bool MQ2CharacterType::GETMEMBER()
 		}
 		return true;
 	}
+	case LoyaltyTokens:
+		Dest.DWord = pChar->LoyaltyRewardBalance;
+		Dest.Type = pIntType;
+		return true;
 	}
 
 
@@ -14591,7 +14598,23 @@ bool MQ2FellowshipMemberType::GETMEMBER()
 		Dest.Ptr = &DataTypeTemp[0];
 		Dest.Type = pStringType;
 		return true;
+	case Sharing:
+		Dest.DWord = 0;
+		Dest.Type = pBoolType;
+		if (PFELLOWSHIPINFO pFellowship = &((PSPAWNINFO)pLocalPlayer)->Fellowship)
+		{
+			for (int i = 0; i < pFellowship->Members; i++)
+			{
+				if (pFellowshipMember->UniqueEntityID.GUID == pFellowship->FellowshipMember[i].UniqueEntityID.GUID)
+				{
+					Dest.DWord = pFellowship->bExpSharingEnabled[i];
+					break;
+				}
+			}
+		}
+		return true;
 	}
+
 	return false;
 }
 
