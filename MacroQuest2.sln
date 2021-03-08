@@ -129,6 +129,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Feedme", "MQ2Feedme\MQ2F
 		{2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221} = {2A0A06A4-E9C6-4229-82EE-BD2D4E0A7221}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2TangSM", "MQ2TangSM\MQ2TangSM.vcxproj", "{BEC70255-DC5E-4E99-8965-E6D52E95B44B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -322,6 +324,12 @@ Global
 		{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}.Release|Win32.Build.0 = Release|Win32
 		{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}.xDebug|Win32.ActiveCfg = Debug|Win32
 		{A1F9DEAA-2844-45BF-A3DB-03C1C68B6EB5}.xDebug|Win32.Build.0 = Debug|Win32
+		{BEC70255-DC5E-4E99-8965-E6D52E95B44B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BEC70255-DC5E-4E99-8965-E6D52E95B44B}.Debug|Win32.Build.0 = Debug|Win32
+		{BEC70255-DC5E-4E99-8965-E6D52E95B44B}.Release|Win32.ActiveCfg = Release|Win32
+		{BEC70255-DC5E-4E99-8965-E6D52E95B44B}.Release|Win32.Build.0 = Release|Win32
+		{BEC70255-DC5E-4E99-8965-E6D52E95B44B}.xDebug|Win32.ActiveCfg = Debug|Win32
+		{BEC70255-DC5E-4E99-8965-E6D52E95B44B}.xDebug|Win32.Build.0 = Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
