@@ -326,7 +326,7 @@ private:
 	static float Distance(float x1, float y1, float z1, float x2, float y2, float z2);
 	float Distance(float x1, float y1, float x2, float y2) const;
 public:
-	bool SetupCamp();
+	bool SetupCamp(int skipFindCenter);
 	bool SetCampRadius(float radius);
 	bool SetCampRadius();
 	MQ2TangBotType();

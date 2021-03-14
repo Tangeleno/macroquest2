@@ -67,7 +67,11 @@ PLUGIN_API VOID ShutdownPlugin(VOID)
 
 VOID MQ2SetCampCommand(PSPAWNINFO pChar, PCHAR szLine)
 {
-	pTangBotType->SetupCamp();
+	int skipFindCenter = 0;
+	if(IsNumber(szLine)) {
+		skipFindCenter = atoi(szLine);
+	}
+	pTangBotType->SetupCamp(skipFindCenter);
 	WriteChatf("Camp Set");
 }
 
@@ -109,7 +113,7 @@ MQ2TangBotType::MQ2TangBotType() :MQ2Type("TangBot") {
 	TypeMethod(OrderGroup);
 }
 
-float MQ2TangBotType::GetCampRadius(PSPAWNINFO spawn) const {
+float MQ2TangBotType::GetCampRadius(const PSPAWNINFO spawn) const {
 	float maxRange = get_melee_range(reinterpret_cast<EQPlayer*>(spawn), reinterpret_cast<EQPlayer*>(spawn));
 	float maxRangeTo = get_melee_range(pCharSpawn, reinterpret_cast<EQPlayer*>(spawn));
 	return _campRadius + (maxRange > maxRangeTo ? maxRange : maxRangeTo);
@@ -146,37 +150,47 @@ bool MQ2TangBotType::OrderGroupByHP()
 	return true;
 }
 
-bool MQ2TangBotType::ValidGroupMember(PCHARINFO pChar, int groupIndex) {
+bool MQ2TangBotType::ValidGroupMember(PCHARINFO pChar,const int groupIndex) {
 	return pChar->pGroupInfo && pChar->pGroupInfo->pMember[groupIndex] && 
 		pChar->pGroupInfo->pMember[groupIndex]->pSpawn &&
 		pChar->pGroupInfo->pMember[groupIndex]->pSpawn->Type != SPAWN_CORPSE &&
 		pChar->pGroupInfo->pMember[groupIndex]->Offline == 0;
 }
 
-bool MQ2TangBotType::SetupCamp() {
+bool MQ2TangBotType::SetupCamp(const int skipFindCenter) {
 
 	//There are faster ways (Welzl's Algorithm) but that's too much work, this is a small list of points so n^4 doesn't matter
 	auto* const pChar = GetCharInfo();
 	auto x = pChar->pSpawn->X, y = pChar->pSpawn->Y, z = pChar->pSpawn->Z;
 	auto groupCount = 1;
 	//Find the center of the camp
-	for (auto i = 1; i < 6; ++i)
-	{
-		if (ValidGroupMember(pChar, i) && !pChar->pGroupInfo->pMember[i]->Puller) {
-			//Group Member is in the zone
-			groupCount++;
-			x += pChar->pGroupInfo->pMember[i]->pSpawn->X;
-			y += pChar->pGroupInfo->pMember[i]->pSpawn->Y;
-			z += pChar->pGroupInfo->pMember[i]->pSpawn->Z;
-		}
+	if (skipFindCenter) {
+		_campX = x;
+		_campY = y;
+		_campZ = z;
 	}
-	_campX = x / groupCount;
-	_campY = y / groupCount;
-	_campZ = z / groupCount;
-	return SetCampRadius();
+	else
+	{
+		for (auto i = 1; i < 6; ++i)
+		{
+			if (ValidGroupMember(pChar, i) && !pChar->pGroupInfo->pMember[i]->Puller) {
+				//Group Member is in the zone
+				groupCount++;
+				x += pChar->pGroupInfo->pMember[i]->pSpawn->X;
+				y += pChar->pGroupInfo->pMember[i]->pSpawn->Y;
+				z += pChar->pGroupInfo->pMember[i]->pSpawn->Z;
+			}
+		}
+		_campX = x / groupCount;
+		_campY = y / groupCount;
+		_campZ = z / groupCount;
+		SetCampRadius();
+	}
+	
+	return true;
 }
 
-bool MQ2TangBotType::SetCampRadius(float radius)
+bool MQ2TangBotType::SetCampRadius(const float radius)
 {
 	_campRadius = radius;
 	return true;
@@ -238,7 +252,7 @@ bool MQ2TangBotType::GETMEMBER() {
 		switch (static_cast<TangBotMethods>(pMethod->ID))
 		{
 		case SetCamp:
-			returnValue = SetupCamp();
+			returnValue = SetupCamp(0);
 			break;
 		case OrderGroup:
 			returnValue = OrderGroupByHP();
@@ -948,12 +962,25 @@ bool MQ2SpellsType::ConfigureSpells() {
 					break;
 				case SpellSubCategories::ResistDebuffs:
 					if (characterClass == EQCharacterClasses::Enchanter)
-						spellType = "Tash";
+					{
+						if(spell->TargetType == TargetTypes::Single)
+						{
+							spellType = "Tash";
+						}
+						else
+						{
+							spellType = "AETash";
+						}
+					}
+					else if (characterClass == EQCharacterClasses::Necromancer)
+					{
+						spellType = "Scent";
+					}
 					else if (characterClass == EQCharacterClasses::Shaman || characterClass == EQCharacterClasses::Magician)
+					{
 						if (strstr(spell->Name, "Malo"))
 							spellType = "Malo";
-					else if (characterClass == EQCharacterClasses::Necromancer)
-						spellType = "Scent";
+					}
 					break;
 				case SpellSubCategories::Enthrall:
 					//03=Group v1, 04=PB AE, 05=Single, 06=Self, 08=Targeted AE, 0e=Pet, 28=AE PC v2, 29=Group v2, 2a=Directional, 45 = Free Target

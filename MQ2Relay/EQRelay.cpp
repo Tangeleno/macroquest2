@@ -1,6 +1,6 @@
 #include "EQRelay.h"
 
-int EQRelay::GetInt(std::vector<byte>& buffer, int offset)
+int EQRelay::GetInt(std::vector<byte>& buffer, const int offset)
 {
 	byteConverter converter{}; 
 	memset(&converter, 0, sizeof(byteConverter));
@@ -11,7 +11,7 @@ int EQRelay::GetInt(std::vector<byte>& buffer, int offset)
 	return converter.Int;
 }
 
-float EQRelay::GetFloat(std::vector<byte>& buffer, int offset)
+float EQRelay::GetFloat(std::vector<byte>& buffer, const int offset)
 {
 	byteConverter converter{};
 	memset(&converter, 0, sizeof(byteConverter));
@@ -22,7 +22,7 @@ float EQRelay::GetFloat(std::vector<byte>& buffer, int offset)
 	return converter.Float;
 }
 
-unsigned int EQRelay::GetUInt(std::vector<byte>& buffer, int offset)
+unsigned int EQRelay::GetUInt(std::vector<byte>& buffer, const int offset)
 {
 	byteConverter converter{};
 	memset(&converter, 0, sizeof(byteConverter));
@@ -33,7 +33,7 @@ unsigned int EQRelay::GetUInt(std::vector<byte>& buffer, int offset)
 	return converter.UInt;
 }
 
-unsigned long EQRelay::GetULong(std::vector<byte>& buffer, int offset)
+unsigned long EQRelay::GetULong(std::vector<byte>& buffer, const int offset)
 {
 	byteConverter converter{};
 	memset(&converter, 0, sizeof(byteConverter));
@@ -44,7 +44,7 @@ unsigned long EQRelay::GetULong(std::vector<byte>& buffer, int offset)
 	return converter.ULong;
 }
 
-__int64 EQRelay::GetInt64(std::vector<byte>& buffer, int offset)
+__int64 EQRelay::GetInt64(std::vector<byte>& buffer, const int offset)
 {
 	byteConverter converter{};
 	memset(&converter, 0, sizeof(byteConverter));
@@ -66,7 +66,7 @@ std::string EQRelay::GetString(std::vector<byte>& buffer, int offset)
 	return std::string(buffer[offset], stringLength);
 }
 
-void EQRelay::InsertIntoBuffer(std::vector<unsigned char>& buffer, const byteConverter& bytes, int length)
+void EQRelay::InsertIntoBuffer(std::vector<unsigned char>& buffer, const byteConverter& bytes, const int length)
 {
 	for (int i = 0; i < length; ++i)
 		buffer.push_back(bytes.Raw[i]);
@@ -236,9 +236,9 @@ void EQRelay::SelfUpdate(std::vector<byte>& buffer) const
 	GetBytes(buffer, characterSpawn->Y);
 	GetBytes(buffer, characterSpawn->Z);
 	auto characterInfo2 = GetCharInfo2();
-	int buffCount = 0;
-	int maxBuffs = GetCharMaxBuffSlots();
-	for (int i = 0; i < maxBuffs; ++i)
+	auto buffCount = 0;
+	const int maxBuffs = GetCharMaxBuffSlots();
+	for (auto i = 0; i < maxBuffs; ++i)
 	{
 		if (characterInfo2->Buff[i].SpellID > 0)
 			buffCount++;
@@ -460,12 +460,13 @@ void EQRelay::HandleReceive()
 	if(_zmq.Receive(msg))
 	{
 
-		for (size_t i = 0; i < msg.size(); i++)
+		for (auto& i : msg)
 		{
-			const EQTopics topic = static_cast<EQTopics>(GetInt(msg[i], 0));
+			const auto topic = static_cast<EQTopics>(GetInt(i, 0));
 			switch (topic) {
-			case EQTopics::None: break;
-			case EQTopics::Join: break;
+			case EQTopics::None:
+			case EQTopics::Join:
+				break;
 			case EQTopics::Welcome: 
 				if (!_welcomed) {
 					_welcomed = true;
@@ -485,7 +486,9 @@ void EQRelay::HandleReceive()
 			case EQTopics::EndZone: break;
 			case EQTopics::PetUpdate: break;
 			case EQTopics::GroupUpdate: break;
-			case EQTopics::AnnounceRequest: break;
+			case EQTopics::AnnounceRequest:
+				_welcomed=false;
+				break;
 			case EQTopics::InventoryUpdate: break;
 			case EQTopics::StatUpdate: break;
 			case EQTopics::SpawnAdd: break;
@@ -495,7 +498,7 @@ void EQRelay::HandleReceive()
 			case EQTopics::ZoneRequest:
 				ZonedUpdate(false);
 				break;
-			default:;
+			default: break;
 			}
 		}
 	}
@@ -518,8 +521,13 @@ void EQRelay::ZonedUpdate(const bool zoneStart)
 		_zoneName = std::string(reinterpret_cast<PZONEINFO>(pZoneInfo)->ShortName);
 		_zmq.Subscribe(_zoneName);
 		SetIdBuffer();
+		auto* const spawnInfo = reinterpret_cast<PSPAWNINFO>(pLocalPlayer);
+		_currentZoneId = spawnInfo->GetZoneID() & 0x7FFF;;
 		GetBytes(buffer, _currentZoneId);
 		GetBytes(buffer, reinterpret_cast<PZONEINFO>(pZoneInfo)->ShortName);
+		GetBytes(buffer, spawnInfo->SpawnID);
+		//Zone Instance
+		GetBytes(buffer,HIWORD(spawnInfo->GetZoneID()));
 		_zmq.AppendTopic(EQTopics::EndZone, buffer, _idBuffer);
 		std::vector<byte> spawnBuffer;
 		FullSpawnUpdate(spawnBuffer);
@@ -573,7 +581,6 @@ void EQRelay::Shutdown() const
 void EQRelay::Initialize(const std::string& publishEndpoint, const std::string& subscribeEndpoint)
 {
 	_zmq.Initialize(publishEndpoint, subscribeEndpoint);
-	_zmq.Subscribe("welcome");
 }
 
 void EQRelay::Pulse()
@@ -582,79 +589,84 @@ void EQRelay::Pulse()
 	if (_currentGameState != EQGameState::InGame || _zoning)
 		return;
 	HandleReceive();
-	if(!_welcomed && tick >=_joinAttemptDelay)
+	if(_welcomed)
 	{
-		_zmq.Send(EQTopics::Join);
-		_joinAttemptDelay = tick += 320;
-		return;
+		auto any = false;
+		if (tick >= _nextStatUpdate)
+		{
+			any = true;
+			std::vector<byte> buffer;
+			StatUpdate(buffer);
+			_zmq.AppendTopic(EQTopics::StatUpdate, buffer, _idBuffer);
+			_nextStatUpdate = tick + _statUpdateInterval;
+		}
+		if (tick >= _nextSelfUpdate)
+		{
+			any = true;
+			std::vector<byte> buffer;
+			SelfUpdate(buffer);
+			_zmq.AppendTopic(EQTopics::SelfUpdate, buffer, _idBuffer);
+			_nextSelfUpdate = tick + _selfUpdateInterval;
+		}
+		if (tick >= _nextTargetUpdate)
+		{
+			any = true;
+			std::vector<byte> buffer;
+			TargetUpdate(buffer);
+			_zmq.AppendTopic(EQTopics::TargetUpdate, buffer, _idBuffer);
+			_nextTargetUpdate = tick + _targetUpdateInterval;
+		}
+		if (tick >= _nextPetUpdate)
+		{
+			any = true;
+			std::vector<byte> buffer;
+			PetUpdate(buffer);
+			_zmq.AppendTopic(EQTopics::PetUpdate, buffer, _idBuffer);
+			_nextPetUpdate = tick + _petUpdateInterval;
+		}
+		if (tick >= _nextGroupUpdate)
+		{
+			any = true;
+			std::vector<byte> buffer;
+			GroupUpdate(buffer);
+			_zmq.AppendTopic(EQTopics::GroupUpdate, buffer, _idBuffer);
+			_nextGroupUpdate = tick + _groupUpdateInterval;
+		}
+		if (tick >= _nextSpawnUpdate)
+		{
+			any = true;
+			std::vector<byte> buffer;
+			SpawnUpdate(buffer);
+			_zmq.AppendTopic(EQTopics::SpawnUpdate, buffer, _idBuffer);
+			_nextSpawnUpdate = tick + _spawnUpdateInterval;
+		}
+		if (tick >= _nextXTargetUpdate)
+		{
+			any = true;
+			std::vector<byte> buffer;
+			XTargetUpdate(buffer);
+			_zmq.AppendTopic(EQTopics::XTargetUpdate, buffer, _idBuffer);
+			_nextXTargetUpdate = tick + _xTargetUpdateInterval;
+		}
+		if (tick >= _nextInventoryUpdate)
+		{
+			any = true;
+			std::vector<byte> buffer;
+			XTargetUpdate(buffer);
+			_zmq.AppendTopic(EQTopics::XTargetUpdate, buffer, _idBuffer);
+			_nextInventoryUpdate = tick + _inventoryUpdateInterval;
+		}
+			
+		if (any)
+			_zmq.Send();
 	}
-	bool any = false;
-	if (tick >= _nextStatUpdate)
+	else
 	{
-		any = true;
-		std::vector<byte> buffer;
-		StatUpdate(buffer);
-		_zmq.AppendTopic(EQTopics::StatUpdate, buffer, _idBuffer);
-		_nextStatUpdate = tick + _statUpdateInterval;
+		if(tick >=_joinAttemptDelay) {
+			_zmq.Send(EQTopics::Join,_idBuffer);
+			_joinAttemptDelay = tick += 320;
+		}
 	}
-	if (tick >= _nextSelfUpdate)
-	{
-		any = true;
-		std::vector<byte> buffer;
-		SelfUpdate(buffer);
-		_zmq.AppendTopic(EQTopics::SelfUpdate, buffer, _idBuffer);
-		_nextSelfUpdate = tick + _selfUpdateInterval;
-	}
-	if (tick >= _nextTargetUpdate)
-	{
-		any = true;
-		std::vector<byte> buffer;
-		TargetUpdate(buffer);
-		_zmq.AppendTopic(EQTopics::TargetUpdate, buffer, _idBuffer);
-		_nextTargetUpdate = tick + _targetUpdateInterval;
-	}
-	if (tick >= _nextPetUpdate)
-	{
-		any = true;
-		std::vector<byte> buffer;
-		PetUpdate(buffer);
-		_zmq.AppendTopic(EQTopics::PetUpdate, buffer, _idBuffer);
-		_nextPetUpdate = tick + _petUpdateInterval;
-	}
-	if (tick >= _nextGroupUpdate)
-	{
-		any = true;
-		std::vector<byte> buffer;
-		GroupUpdate(buffer);
-		_zmq.AppendTopic(EQTopics::GroupUpdate, buffer, _idBuffer);
-		_nextGroupUpdate = tick + _groupUpdateInterval;
-	}
-	if (tick >= _nextSpawnUpdate)
-	{
-		any = true;
-		std::vector<byte> buffer;
-		SpawnUpdate(buffer);
-		_zmq.AppendTopic(EQTopics::SpawnUpdate, buffer, _idBuffer);
-		_nextSpawnUpdate = tick + _spawnUpdateInterval;
-	}
-	if (tick >= _nextXTargetUpdate)
-	{
-		any = true;
-		std::vector<byte> buffer;
-		XTargetUpdate(buffer);
-		_zmq.AppendTopic(EQTopics::XTargetUpdate, buffer, _idBuffer);
-		_nextXTargetUpdate = tick + _xTargetUpdateInterval;
-	}
-	if (tick >= _nextInventoryUpdate)
-	{
-		any = true;
-		std::vector<byte> buffer;
-		XTargetUpdate(buffer);
-		_zmq.AppendTopic(EQTopics::XTargetUpdate, buffer, _idBuffer);
-		_nextInventoryUpdate = tick + _inventoryUpdateInterval;
-	}
-	if (any && _welcomed)
-		_zmq.Send();
 }
 
 void EQRelay::FullSpawnUpdate(std::vector<byte>& buffer) const
@@ -669,6 +681,7 @@ void EQRelay::FullSpawnUpdate(std::vector<byte>& buffer) const
 		spawn = spawn->pNext;
 	}
 	GetBytes(buffer,spawnCount);
+	spawn = pSpawnList;
 	while (spawn)
 	{
 		GetBytes(buffer, spawn->SpawnID);
@@ -700,17 +713,21 @@ void EQRelay::DoAnnounce()
 	std::vector<byte> groupBuffer;
 	std::vector<byte> fullSpawnBuffer;
 	std::vector<byte> zoneBuffer;
-	
+
 	StatUpdate(statBuffer);
 	SelfUpdate(selfBuffer);
 	TargetUpdate(targetBuffer);
 	PetUpdate(petBuffer);
 	GroupUpdate(groupBuffer);
 	FullSpawnUpdate(fullSpawnBuffer);
-	
-	_currentZoneId = GetCharInfo()->zoneId & 0x7FFF;
+
+	auto* const spawnInfo = reinterpret_cast<PSPAWNINFO>(pLocalPlayer);
+	_currentZoneId = spawnInfo->GetZoneID() & 0x7FFF;
 	GetBytes(zoneBuffer, _currentZoneId);
 	GetBytes(zoneBuffer, reinterpret_cast<PZONEINFO>(pZoneInfo)->ShortName);
+	GetBytes(zoneBuffer, spawnInfo->SpawnID);
+	//Zone Instance
+	GetBytes(zoneBuffer,HIWORD(spawnInfo->GetZoneID()));
 	
 	_zmq.AppendTopic(EQTopics::Announce, announceBuffer, _idBuffer);
 	_zmq.AppendTopic(EQTopics::EndZone, zoneBuffer, _idBuffer);
