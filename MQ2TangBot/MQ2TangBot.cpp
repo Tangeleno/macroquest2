@@ -2,26 +2,17 @@
 #include <iterator>
 #include <sstream>
 
-BOOL DataTangBot(PCHAR Index, MQ2TYPEVAR &dest) {
+BOOL DataTangBot(PCHAR Index, MQ2TYPEVAR& dest) {
 	dest.DWord = 1;
 	dest.Type = pTangBotType;
 	return true;
 }
 
-BOOL DataQueueCollection(PCHAR Index, MQ2TYPEVAR &dest) {
+BOOL DataSpellsType(PCHAR Index, MQ2TYPEVAR& dest) {
 	if (ISINDEX())
 	{
-		return pQueueCollectionType->Lookup(Index, dest);
-	}
-	dest.DWord = 1;
-	dest.Type = pQueueCollectionType;
-	return true;
-}
-BOOL DataSpellsType(PCHAR Index, MQ2TYPEVAR &dest) {
-	if(ISINDEX())
-	{
 		return pSpellsType->GetMember(MQ2VARPTR(), "", Index, dest);
-	} 
+	}
 	else
 	{
 		dest.DWord = 1;
@@ -35,12 +26,8 @@ PLUGIN_API VOID InitializePlugin(VOID)
 {
 	pTangBotType = new MQ2TangBotType;
 	pSpellsType = new MQ2SpellsType;
-	pQueueType = new MQ2QueueType;
-	pQueueCollectionType = new QueueCollectionType;
-	AddMQ2Type(*pQueueType);
 	AddMQ2Data("TangBot", DataTangBot);
 	AddMQ2Data("Spells", DataSpellsType);
-	AddMQ2Data("QueueCollection", DataQueueCollection);
 	AddCommand("/loadspells", MQ2LoadSpellsCommand);
 	AddCommand("/setcamp", MQ2SetCampCommand);
 	AddCommand("/setcampradius", MQ2SetCampRadiusCommand);
@@ -50,14 +37,10 @@ PLUGIN_API VOID InitializePlugin(VOID)
 
 PLUGIN_API VOID ShutdownPlugin(VOID)
 {
-	RemoveMQ2Type(*pQueueType);
 	delete pTangBotType;
 	delete pSpellsType;
-	delete pQueueType;
-	delete pQueueCollectionType;
 	RemoveMQ2Data("TangBot");
 	RemoveMQ2Data("Spells");
-	RemoveMQ2Data("QueueCollection");
 	RemoveCommand("/loadspells");
 	RemoveCommand("/setcamp");
 	RemoveCommand("/setcampradius");
@@ -68,7 +51,7 @@ PLUGIN_API VOID ShutdownPlugin(VOID)
 VOID MQ2SetCampCommand(PSPAWNINFO pChar, PCHAR szLine)
 {
 	int skipFindCenter = 0;
-	if(IsNumber(szLine)) {
+	if (IsNumber(szLine)) {
 		skipFindCenter = atoi(szLine);
 	}
 	pTangBotType->SetupCamp(skipFindCenter);
@@ -77,10 +60,10 @@ VOID MQ2SetCampCommand(PSPAWNINFO pChar, PCHAR szLine)
 
 VOID MQ2SetCampRadiusCommand(PSPAWNINFO pChar, PCHAR szLine)
 {
-	if(IsNumber(szLine)) {
+	if (IsNumber(szLine)) {
 		auto radius = atof(szLine);
 		pTangBotType->SetCampRadius(radius);
-		WriteChatf("Radius set to %d",radius);
+		WriteChatf("Radius set to %d", radius);
 	}
 }
 VOID MQ2GroupHPCommand(PSPAWNINFO pChar, PCHAR szLine)
@@ -150,8 +133,8 @@ bool MQ2TangBotType::OrderGroupByHP()
 	return true;
 }
 
-bool MQ2TangBotType::ValidGroupMember(PCHARINFO pChar,const int groupIndex) {
-	return pChar->pGroupInfo && pChar->pGroupInfo->pMember[groupIndex] && 
+bool MQ2TangBotType::ValidGroupMember(PCHARINFO pChar, const int groupIndex) {
+	return pChar->pGroupInfo && pChar->pGroupInfo->pMember[groupIndex] &&
 		pChar->pGroupInfo->pMember[groupIndex]->pSpawn &&
 		pChar->pGroupInfo->pMember[groupIndex]->pSpawn->Type != SPAWN_CORPSE &&
 		pChar->pGroupInfo->pMember[groupIndex]->Offline == 0;
@@ -186,7 +169,7 @@ bool MQ2TangBotType::SetupCamp(const int skipFindCenter) {
 		_campZ = z / groupCount;
 		SetCampRadius();
 	}
-	
+
 	return true;
 }
 
@@ -218,7 +201,7 @@ float MQ2TangBotType::Distance(const float x1, const float y1, const float z1, c
 	const auto x = x1 - x2;
 	const auto y = y1 - y2;
 	const auto z = z1 - z2;
-	return sqrtf(x*x + y * y + z * z);
+	return sqrtf(x * x + y * y + z * z);
 }
 
 float MQ2TangBotType::Distance(const float x1, const float y1, const float x2, const float y2) const {
@@ -309,13 +292,13 @@ bool MQ2TangBotType::GETMEMBER() {
 				break;
 			}
 			const auto spawnId = GETNUMBER();
-			if(spawnId==0)
+			if (spawnId == 0)
 			{
 				returnValue = false;
 				break;
 			}
 			auto* const spawn = reinterpret_cast<PSPAWNINFO>(GetSpawnByID(spawnId));
-			if(!spawn)
+			if (!spawn)
 			{
 				returnValue = false;
 				break;
@@ -325,12 +308,12 @@ bool MQ2TangBotType::GETMEMBER() {
 			break;
 		}
 		case FindXTarget:
-			{
-				//Loop through XTargets and return an npc in the camp
+		{
+			//Loop through XTargets and return an npc in the camp
 			Dest.DWord = 0;
 			Dest.Type = pSpawnType;
 			auto* const charInfo = GetCharInfo();
-			if (const auto *xtm = charInfo->pXTargetMgr)
+			if (const auto* xtm = charInfo->pXTargetMgr)
 			{
 				if (xtm->XTargetSlots.Count)
 				{
@@ -344,18 +327,18 @@ bool MQ2TangBotType::GETMEMBER() {
 										auto isGroupMark = false;
 										for (auto g : charInfo->pSpawn->GroupMarkNPC)
 										{
-											if(g == pSpawn->GetId()) 
+											if (g == pSpawn->GetId())
 											{
 												isGroupMark = true;
 												break;
 											}
 										}
-										
-										if(isGroupMark)
+
+										if (isGroupMark)
 										{
 											continue;
 										}
-										
+
 										if (Distance(_campX, _campY, pSpawn->X, pSpawn->Y) <= GetCampRadius(pSpawn) && LineOfSight(charInfo->pSpawn, pSpawn)) {
 											Dest.Ptr = pSpawn;
 											Dest.Type = pSpawnType;
@@ -369,7 +352,7 @@ bool MQ2TangBotType::GETMEMBER() {
 				}
 			}
 			break;
-			}
+		}
 		case SpawnInXTarget:
 		{
 			if (!ISINDEX() || !ISNUMBER()) {
@@ -379,7 +362,7 @@ bool MQ2TangBotType::GETMEMBER() {
 			const auto spawnId = GETNUMBER();
 			Dest.DWord = 0;
 			Dest.Type = pIntType;
-			if (const auto *xtm = GetCharInfo()->pXTargetMgr)
+			if (const auto* xtm = GetCharInfo()->pXTargetMgr)
 			{
 				if (xtm->XTargetSlots.Count)
 				{
@@ -417,8 +400,8 @@ bool MQ2TangBotType::GETMEMBER() {
 				{
 					returnValue = true;
 					auto index = static_cast<unsigned int>(GETNUMBER());
-					index = index-1;
-					
+					index = index - 1;
+
 					if (index >= 0 && index < _orderedGroupMembers.size())
 					{
 						Dest.DWord = _orderedGroupMembers[index].GroupNumber;
@@ -440,10 +423,11 @@ MQ2SpellsType::MQ2SpellsType() :MQ2Type("Spells") {
 	TypeMethod(FindSpells);
 	_poisonItemId = 0;
 }
+
 void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterClass) {
 	int combatAbility = 0;
-	std::unordered_map<int,PSPELL> berserkerAxes;
-	while (combatAbility<NUM_COMBAT_ABILITIES && pCombatSkillsSelectWnd->ShouldDisplayThisSkill(combatAbility))
+	std::unordered_map<int, PSPELL> berserkerAxes;
+	while (combatAbility < NUM_COMBAT_ABILITIES && pCombatSkillsSelectWnd->ShouldDisplayThisSkill(combatAbility))
 	{
 		if (PSPELL spell = GetSpellByID(pPCData->GetCombatAbility(combatAbility))) {
 			std::string spellType = "";
@@ -474,7 +458,7 @@ void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterCla
 				case SpellCategories::CreateItem:
 				{
 					const long itemId = GetSpellBase(spell, 0);
-					berserkerAxes.insert_or_assign(itemId,spell);
+					berserkerAxes.insert_or_assign(itemId, spell);
 					break;
 				}
 				case SpellCategories::UtilityDetrimental:
@@ -509,11 +493,11 @@ void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterCla
 		combatAbility++;
 	}
 	//if we're a berserker we have to assign spell axes as well.
-	if(characterClass==EQCharacterClasses::Berserker)
+	if (characterClass == EQCharacterClasses::Berserker)
 	{
-		SetAxes(pSpawn,"Jolt",berserkerAxes);
-		SetAxes(pSpawn,"Snare",berserkerAxes);
-		SetAxes(pSpawn,"StunNuke",berserkerAxes);
+		SetAxes(pSpawn, "Jolt", berserkerAxes);
+		SetAxes(pSpawn, "Snare", berserkerAxes);
+		SetAxes(pSpawn, "StunNuke", berserkerAxes);
 
 		//And of course Volley is different, they have a reagentId[0] of -1 even thought they do have a reagent. Luckily it's the name of the Volley Spell
 		auto iterator = Spells.find("Volley");
@@ -521,11 +505,11 @@ void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterCla
 		{
 			PSPELL axeSpell = nullptr;
 			//there's no pretty way to do this...
-			if(_strcmpi(iterator->second->Name,"Rage Volley") == 0)
+			if (_strcmpi(iterator->second->Name, "Rage Volley") == 0)
 			{
 				//Magic number, ID of Rage Axe
 				const auto axeIterator = berserkerAxes.find(69020);
-				if(axeIterator!=berserkerAxes.end())
+				if (axeIterator != berserkerAxes.end())
 				{
 					axeSpell = axeIterator->second;
 				}
@@ -536,11 +520,11 @@ void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterCla
 				auto* const volleyLevel = iterator->second->ClassLevel;
 				for (auto axe : berserkerAxes)
 				{
-					if(axe.second->ClassLevel>volleyLevel)
+					if (axe.second->ClassLevel > volleyLevel)
 						continue;
-					if(axeSpell)
+					if (axeSpell)
 					{
-						if(volleyLevel-axeSpell->ClassLevel > volleyLevel-axe.second->ClassLevel)
+						if (volleyLevel - axeSpell->ClassLevel > volleyLevel - axe.second->ClassLevel)
 						{
 							axeSpell = axe.second;
 						}
@@ -551,11 +535,11 @@ void MQ2SpellsType::ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterCla
 					}
 				}
 			}
-			if(axeSpell)
+			if (axeSpell)
 			{
-				SetSpell("VolleyAxe",axeSpell,EQCharacterClasses::Berserker);
+				SetSpell("VolleyAxe", axeSpell, EQCharacterClasses::Berserker);
 			}
-		}	
+		}
 	}
 }
 
@@ -564,27 +548,26 @@ void MQ2SpellsType::SetAxes(PSPAWNINFO pSpawn, const std::string& spellType, std
 	auto iterator = Spells.find(spellType);
 	if (iterator != Spells.end())
 	{
-		if(iterator->second->ReagentCount[0])
+		if (iterator->second->ReagentCount[0])
 		{
 			//This is needed because otherwise the compiler seems decide  axeSpell!=axeSpells.end() is true for the 'Jolt' spell.. I've no idea what's going on here
 			auto* spell = iterator->second;
 			auto reagentId = spell->ReagentID[0];
-			if(reagentId) {
+			if (reagentId) {
 				const auto axeSpell = axeSpells.find(reagentId);
-				if(axeSpell!=axeSpells.end())
+				if (axeSpell != axeSpells.end())
 				{
-					SetSpell(spellType+"Axe",axeSpell->second,EQCharacterClasses::Berserker);
+					SetSpell(spellType + "Axe", axeSpell->second, EQCharacterClasses::Berserker);
 				}
 			}
 		}
 	}
 }
 
-
 bool MQ2SpellsType::ConfigureSpells() {
 	Spells.clear();
 	auto* pSpawn = GetCharInfo()->pSpawn;
-	int characterClass = GetCharInfo()->pSpawn->mActorClient.Class;
+	auto characterClass = pSpawn->mActorClient.Class;
 	if (!ClassInfo[characterClass].PureCaster) {
 		ConfigureCombatAbilities(pSpawn, characterClass);
 	}
@@ -596,7 +579,7 @@ bool MQ2SpellsType::ConfigureSpells() {
 				continue;
 			auto* spell = GetSpellByID(spellBook[i]);
 			std::string spellType;
-			bool ignoreType = false;
+			auto ignoreType = false;
 			switch (spell->Category)
 			{
 			case SpellCategories::Heals:
@@ -604,16 +587,22 @@ bool MQ2SpellsType::ConfigureSpells() {
 				{
 				case SpellSubCategories::Heals:
 					//
-					if(strstr(spell->Name, "Remedy"))
+					if (strstr(spell->Name, "Remedy"))
 					{
 						FindQuickHealSpell(spell);
-					} else
+					}
+					else
 					{
-						spellType = FindHealSpell(spell);	
+						spellType = FindHealSpell(spell);
 					}
 					break;
 				case SpellSubCategories::Cure:
 					spellType = FindCureSpell(spell);
+					break;
+				case SpellSubCategories::ManaFlow:
+					if (characterClass == EQCharacterClasses::Wizard) {
+						spellType = "Harvest";
+					}
 					break;
 				case SpellSubCategories::Resurrection:
 					spellType = FindResurrectionSpell(spell);
@@ -692,6 +681,10 @@ bool MQ2SpellsType::ConfigureSpells() {
 					break;
 				case SpellSubCategories::Stun:
 					spellType = "Stun";
+					if (spell->NumEffects == 1)
+					{
+						ignoreType = true;
+					}
 					break;
 				case SpellSubCategories::Chromatic:
 					spellType = "Chromatic";
@@ -824,7 +817,7 @@ bool MQ2SpellsType::ConfigureSpells() {
 					case EQCharacterClasses::Paladin:
 						if (spell->spaindex == 19)
 						{
-							if(spell->ReuseTimerIndex==12)
+							if (spell->ReuseTimerIndex == 12)
 							{
 								spellType = "DefensiveProc";
 							}
@@ -833,7 +826,7 @@ bool MQ2SpellsType::ConfigureSpells() {
 								spellType = "FuryProc";
 							}
 						}
-						else if(strstr(spell->Name,"Remorse"))
+						else if (strstr(spell->Name, "Remorse"))
 						{
 							spellType = "RemorseProc";
 						}
@@ -841,10 +834,13 @@ bool MQ2SpellsType::ConfigureSpells() {
 					case EQCharacterClasses::Magician:
 						spellType = "DefensiveProc";
 						break;
+					case EQCharacterClasses::Ranger:
+						spellType = "MagicProc";
+						break;
 					case EQCharacterClasses::Shaman:
 						if (spell->spaindex == 7)
 						{
-							if(spell->TargetType == TargetTypes::Self)
+							if (spell->TargetType == TargetTypes::Self)
 							{
 								spellType = "SpellProc";
 							}
@@ -864,9 +860,23 @@ bool MQ2SpellsType::ConfigureSpells() {
 						}
 						break;
 					case EQCharacterClasses::ShadowKnight:
-						if(spell->TargetType == TargetTypes::Self)
+						if (strstr(spell->Name, "Skin"))
 						{
-							spellType = "TapProc";
+							spellType = "DefensiveProc";
+						}
+						else {
+							switch (spell->SpellGroup)
+							{
+							case 6029:
+								spellType = "KillProc";
+								break;
+							case 6032:
+								spellType = "LeechProc";
+								break;
+							default:
+								spellType = "TapProc";
+								break;
+							}
 						}
 					default:
 						break;
@@ -883,8 +893,11 @@ bool MQ2SpellsType::ConfigureSpells() {
 					else
 						spellType = "GroupSpellGuard";
 					break;
+				case SpellSubCategories::Levitate:
+					spellType = "Levitate";
+					break;
 				case SpellSubCategories::Visages:
-					if(spell->TargetType == TargetTypes::Single && characterClass == EQCharacterClasses::ShadowKnight)
+					if (spell->TargetType == TargetTypes::Single && characterClass == EQCharacterClasses::ShadowKnight)
 					{
 						spellType = "AggroVisage";
 					}
@@ -963,7 +976,7 @@ bool MQ2SpellsType::ConfigureSpells() {
 				case SpellSubCategories::ResistDebuffs:
 					if (characterClass == EQCharacterClasses::Enchanter)
 					{
-						if(spell->TargetType == TargetTypes::Single)
+						if (spell->TargetType == TargetTypes::Single)
 						{
 							spellType = "Tash";
 						}
@@ -1043,7 +1056,14 @@ bool MQ2SpellsType::ConfigureSpells() {
 					spellType = "Fire";
 					break;
 				case SpellSubCategories::Magic:
-					spellType = "Magic";
+					if (strstr(spell->Name, "Splurt") || strstr(spell->Name, "Splort") || strstr(spell->Name, "Splart"))
+					{
+						spellType = "Splurt";
+					}
+					else
+					{
+						spellType = "Magic";
+					}
 					break;
 				case SpellSubCategories::Cold:
 					spellType = "Cold";
@@ -1113,7 +1133,7 @@ bool MQ2SpellsType::ConfigureSpells() {
 					spellType = "SwarmPet";
 					break;
 				case SpellSubCategories::PetMiscBuffs:
-					if (strstr(spell->Name, "Iceflame") || strncmp("Spirit of ",spell->Name,10) == 0)
+					if (strstr(spell->Name, "Iceflame") || strncmp("Spirit of ", spell->Name, 10) == 0)
 						spellType = "PetProc";
 					break;
 				case SpellSubCategories::SumAnimation:
@@ -1172,6 +1192,24 @@ bool MQ2SpellsType::ConfigureSpells() {
 				case SpellSubCategories::DurationTap:
 					spellType = "TapDot";
 					break;
+				case SpellSubCategories::Health:
+					spellType = "TapNuke";
+					break;
+				case SpellSubCategories::HealthMana:
+					spellType = "HealthManaTapNuke";
+					break;
+				case SpellSubCategories::PowerTap:
+					if (characterClass == EQCharacterClasses::ShadowKnight)
+					{
+						if (strstr(spell->Name, "of Pain") || strstr(spell->Name, "of Agony"))
+						{
+							spellType = "ACTap";
+						}
+						else if (strstr(spell->Name, "of Hate")) {
+							spellType = "ATKTap";
+						}
+					}
+					break;
 				}
 				break;
 			default:
@@ -1180,13 +1218,25 @@ bool MQ2SpellsType::ConfigureSpells() {
 			if (spellType[0])
 			{
 				if (spellType == "Mez")
-					SetMezSpell(spellType, spell, characterClass);
+				{
+					SetMezSpell(spell, characterClass);
+				}
+				else if (spellType == "Stun" && characterClass == EQCharacterClasses::Paladin)
+				{
+					SetStunSpell(spell, characterClass);
+				}
+				else if (spellType == "Jolt" && characterClass == EQCharacterClasses::ShadowKnight)
+				{
+					SetJoltSpell(spell, characterClass);
+				}
 				else
+				{
 					SetSpell(spellType, spell, characterClass);
+				}
 			}
 		}
 	}
-	if(characterClass==EQCharacterClasses::Rogue)
+	if (characterClass == EQCharacterClasses::Rogue)
 	{
 		ConfigurePoisonClicky(pSpawn);
 	}
@@ -1196,11 +1246,11 @@ bool MQ2SpellsType::ConfigureSpells() {
 void MQ2SpellsType::EchoSpells()
 {
 	WriteChatf("Found the following spells");
-	for (auto & Spell : Spells)
+	for (auto& Spell : Spells)
 	{
 		WriteChatf("\ao%s:\ax \a-g%s\ax", Spell.first.c_str(), Spell.second->Name);
 	}
-	if(_poisonItemId!=0)
+	if (_poisonItemId != 0)
 	{
 		auto* const poison = FindItemByID(_poisonItemId);
 		WriteChatf("\aoPoisonClicky:\ax \a-g%s\ax", poison->Item1->Name);
@@ -1376,10 +1426,10 @@ void MQ2SpellsType::SetSpell(std::string spellType, PSPELL spell, int characterC
 	}
 };
 
-void MQ2SpellsType::SetMezSpell(const std::string& spellType, PSPELL spell, int characterClass) {
-	auto mez1 = Spells.find("Mez1");
-	auto mez2 = Spells.find("Mez2");
-	auto mez3 = Spells.find("Mez3");
+void MQ2SpellsType::SetMezSpell(PSPELL spell, const int characterClass) {
+	const auto mez1 = Spells.find("Mez1");
+	const auto mez2 = Spells.find("Mez2");
+	const auto mez3 = Spells.find("Mez3");
 	if (GetCastTime(spell) < 2000) {
 		auto quickMez = Spells.find("QuickMez");
 		if (quickMez != Spells.end() && quickMez->second->ClassLevel[characterClass] < spell->ClassLevel[characterClass]) {
@@ -1396,85 +1446,215 @@ void MQ2SpellsType::SetMezSpell(const std::string& spellType, PSPELL spell, int 
 		Spells.insert_or_assign("Mez3", spell);
 	}
 	else {
-		PSPAWNINFO pSpawn = GetCharInfo()->pSpawn;
-		
+		auto* const pSpawn = GetCharInfo()->pSpawn;
+
 		//All mez slots are filled, we have to replace the worse one
 		std::unordered_map<std::string, PSPELL>::const_iterator mezSpells[3] = { mez1,mez2,mez3 };
-		int worse = 0;
+		auto worst = 0;
 		//Find the worse mez
-		for (int i = 1; i < 3; i++)
+		for (auto i = 1; i < 3; i++)
 		{
-			auto worseMax = GetSpellMax(mezSpells[worse]->second, 0);
-			auto iMax = GetSpellMax(mezSpells[i]->second, 0);
-			if (worseMax > iMax) {
-				worse = i;
-			}
-			else if (worseMax == iMax) {
-				//The mez spells are the same level, we'll get rid of the one that has the lower duration
-				auto worseDuration = GetSpellDuration(mezSpells[worse]->second, pSpawn);
-				auto iDuration = GetSpellDuration(mezSpells[i]->second, pSpawn);
-				if (worseDuration > iDuration) {
-					worse = i;
-				}
-				else if (worseDuration == iDuration) {
-					//Same duration, onto cast time
-					auto worseCastTime = GetCastTime(mezSpells[worse]->second);
-					auto iCastTime = GetCastTime(mezSpells[worse]->second);
-					if (worseCastTime < iCastTime) {
-						worse = i;
-					}
-					else if (worseCastTime == iCastTime) {
-						//Same cast time, onto recast time
-						if (mezSpells[worse]->second->RecastTime < mezSpells[i]->second->RecastTime) {
-							worse = i;
-						}
-						else if (mezSpells[worse]->second->RecastTime < mezSpells[i]->second->RecastTime) {
-							//Same recast, time to check mana, after this they're the same
-							if (mezSpells[worse]->second->ManaCost < mezSpells[i]->second->ManaCost) {
-								worse = i;
-							}
-						}
-					}
-				}
+			if (IsWorseMezSpell(mezSpells[worst]->second, mezSpells[i]->second, pSpawn))
+			{
+				worst = i;
 			}
 		}
 
-		//Compare the worse mez to the current spell
-		auto worseMax = GetSpellMax(mezSpells[worse]->second, 0);
-		auto iMax = GetSpellMax(spell, 0);
-		if (worseMax < iMax) {
-			Spells.insert_or_assign(mezSpells[worse]->first, spell);
+		//Compare the worst mez to the current mez
+		if (!IsWorseMezSpell(mezSpells[worst]->second, spell, pSpawn))
+		{
+			Spells.insert_or_assign(mezSpells[worst]->first, spell);
 		}
-		else if (worseMax == iMax) {
-			//The mez spells are the same level, we'll get rid of the one that has the lower duration
-			auto worseDuration = GetSpellDuration(mezSpells[worse]->second, pSpawn);
-			auto iDuration = GetSpellDuration(spell, pSpawn);
-			if (worseDuration < iDuration) {
-				Spells.insert_or_assign(mezSpells[worse]->first, spell);
+	}
+}
+
+void MQ2SpellsType::SetJoltSpell(_SPELL* spell, const int characterClass)
+{
+	const auto jolt1 = Spells.find("Jolt1");
+	const auto jolt2 = Spells.find("Jolt2");
+	const auto jolt3 = Spells.find("Jolt3");
+	if (jolt1 == Spells.end()) {
+		Spells.insert_or_assign("Jolt1", spell);
+	}
+	else if (jolt2 == Spells.end()) {
+		Spells.insert_or_assign("Jolt2", spell);
+	}
+	else if (jolt3 == Spells.end()) {
+		Spells.insert_or_assign("Jolt3", spell);
+	}
+	else {
+		auto* pSpawn = GetCharInfo()->pSpawn;
+
+		//All jolt slots are filled, we have to replace the worse one
+		std::unordered_map<std::string, PSPELL>::const_iterator joltSpells[3] = { jolt1,jolt2,jolt3 };
+		auto worst = 0;
+		//Find the worse stun
+		for (auto i = 1; i < 3; i++)
+		{
+			if (IsWorseJoltSpell(joltSpells[worst]->second, joltSpells[i]->second, characterClass))
+			{
+				worst = i;
 			}
-			else if (worseDuration == iDuration) {
-				//Same duration, onto cast time
-				auto worseCastTime = GetCastTime(mezSpells[worse]->second);
-				auto iCastTime = GetCastTime(mezSpells[worse]->second);
-				if (worseCastTime > iCastTime) {
-					Spells.insert_or_assign(mezSpells[worse]->first, spell);
+		}
+		if (!IsWorseMezSpell(joltSpells[worst]->second, spell, pSpawn))
+		{
+			Spells.insert_or_assign(joltSpells[worst]->first, spell);
+		}
+	}
+}
+
+void MQ2SpellsType::SetStunSpell(PSPELL spell, const int characterClass) {
+	const auto stun1 = Spells.find("Stun1");
+	const auto stun2 = Spells.find("Stun2");
+	const auto stun3 = Spells.find("Stun3");
+	if (stun1 == Spells.end()) {
+		Spells.insert_or_assign("Stun1", spell);
+	}
+	else if (stun2 == Spells.end()) {
+		Spells.insert_or_assign("Stun2", spell);
+	}
+	else if (stun3 == Spells.end()) {
+		Spells.insert_or_assign("Stun3", spell);
+	}
+	else {
+		auto* pSpawn = GetCharInfo()->pSpawn;
+
+		//All stun slots are filled, we have to replace the worse one
+		std::unordered_map<std::string, PSPELL>::const_iterator stunSpells[3] = { stun1,stun2,stun3 };
+		auto worst = 0;
+		//Find the worse stun
+		for (auto i = 1; i < 3; i++)
+		{
+			if (IsWorseStunSpell(stunSpells[worst]->second, stunSpells[i]->second, characterClass))
+			{
+				worst = i;
+			}
+		}
+		if (!IsWorseMezSpell(stunSpells[worst]->second, spell, pSpawn))
+		{
+			Spells.insert_or_assign(stunSpells[worst]->first, spell);
+		}
+	}
+};
+
+bool MQ2SpellsType::IsWorseJoltSpell(_SPELL* const currentWorst, _SPELL* const compareTo, const int characterClass)
+{
+	auto isWorse = false;
+
+	if (currentWorst->HateGenerated > compareTo->HateGenerated)
+	{
+		isWorse = true;
+	}
+	else if (currentWorst->HateGenerated == compareTo->HateGenerated)
+	{
+		//Hate generated is the same, on to mana cost
+		if (currentWorst->ManaCost < compareTo->ManaCost)
+		{
+			isWorse = true;
+		}
+		else if (currentWorst->ManaCost == compareTo->ManaCost)
+		{
+			//Same mana cost, on to recast time
+			if (currentWorst->RecastTime < compareTo->RecastTime)
+			{
+				isWorse = true;
+			}
+			else if (currentWorst->RecastTime == compareTo->RecastTime)
+			{
+				//Same recast, on to level, we want the lowest level
+				if (currentWorst->ClassLevel[characterClass] < compareTo->ClassLevel[characterClass])
+				{
+					isWorse = true;
 				}
-				else if (worseCastTime == iCastTime) {
-					//Same cast time, onto recast time
-					if (mezSpells[worse]->second->RecastTime > spell->RecastTime) {
-						Spells.insert_or_assign(mezSpells[worse]->first, spell);
-					}
-					else if (mezSpells[worse]->second->RecastTime > spell->RecastTime) {
-						//Same recast, time to check mana, after this they're the same
-						if (mezSpells[worse]->second->ManaCost > spell->ManaCost) {
-							Spells.insert_or_assign(mezSpells[worse]->first, spell);
-						}
+			}
+		}
+	}
+
+	return isWorse;
+}
+
+bool MQ2SpellsType::IsWorseMezSpell(_SPELL* const currentWorst, _SPELL* const compareTo, PSPAWNINFO spawnInfo)
+{
+	auto isWorse = false;
+	const auto currentMax = GetSpellMax(currentWorst, 0);
+	const auto compareMax = GetSpellMax(compareTo, 0);
+	if (currentMax > compareMax) {
+		isWorse = true;
+	}
+	else if (currentMax == compareMax) {
+		//The mez spells are the same level, we'll get rid of the one that has the lower duration
+		const auto currentDuration = GetSpellDuration(currentWorst, spawnInfo);
+		const auto compareDuration = GetSpellDuration(compareTo, spawnInfo);
+		if (currentDuration > compareDuration) {
+			isWorse = true;
+		}
+		else if (currentDuration == compareDuration) {
+			//Same duration, onto cast time
+			const auto currentCastTime = GetCastTime(currentWorst);
+			const auto compareCastTime = GetCastTime(compareTo);
+			if (currentCastTime < compareCastTime) {
+				isWorse = true;
+			}
+			else if (currentCastTime == compareCastTime) {
+				//Same cast time, onto recast time
+				if (currentWorst->RecastTime < compareTo->RecastTime) {
+					isWorse = true;
+				}
+				else if (currentWorst->RecastTime == compareTo->RecastTime) {
+					//Same recast, time to check mana, after this they're the same
+					if (currentWorst->ManaCost < compareTo->ManaCost) {
+						isWorse = true;
 					}
 				}
 			}
 		}
 	}
-};
+	return isWorse;
+}
+
+bool MQ2SpellsType::IsWorseStunSpell(_SPELL* const currentWorst, _SPELL* const compareTo, const int characterClass)
+{
+	auto isWorse = false;
+	const auto worstMax = GetSpellMax(currentWorst, 0);
+	const auto iMax = GetSpellMax(compareTo, 0);
+	if (worstMax > iMax) {
+		isWorse = true;
+	}
+	else if (worstMax == iMax) {
+		//The stun spells are the same level, we'll get rid of the one with the longest cast time
+		const auto worstCastTime = GetCastTime(currentWorst);
+		const auto iCastTime = GetCastTime(currentWorst);
+		if (worstCastTime < iCastTime)
+		{
+			isWorse = true;
+		}
+		else if (worstCastTime == iCastTime)
+		{
+			//Same cast time, on to mana cost
+			if (currentWorst->ManaCost > compareTo->ManaCost)
+			{
+				isWorse = true;
+			}
+			else if (currentWorst->ManaCost == compareTo->ManaCost)
+			{
+				//Same mana cost, on to recast time
+				if (currentWorst->RecastTime < compareTo->RecastTime)
+				{
+					isWorse = true;
+				}
+				else if (currentWorst->RecastTime == compareTo->RecastTime)
+				{
+					//Same recast, now we just go with lowest level to help with fizzles I guess
+					if (currentWorst->ClassLevel[characterClass] < compareTo->ClassLevel[characterClass])
+					{
+						isWorse = true;
+					}
+				}
+			}
+		}
+	}
+	return isWorse;
+}
 
 long long MQ2SpellsType::GetCastTime(PSPELL spell)
 {
@@ -1492,7 +1672,7 @@ bool MQ2SpellsType::GETMEMBER()
 {
 	bool returnValue = false;
 	if (ISINDEX()) {
-		if(!strcmp(Index,"PoisonClicky"))
+		if (!strcmp(Index, "PoisonClicky"))
 		{
 			Dest.Ptr = FindItemByID(_poisonItemId);
 			Dest.Type = pItemType;
@@ -1510,7 +1690,7 @@ bool MQ2SpellsType::GETMEMBER()
 			Dest.Type = pSpellType;
 			returnValue = true;
 		}
-	} 
+	}
 	else
 	{
 		PMQ2TYPEMEMBER pMethod = MQ2SpellsType::FindMethod(Member);
@@ -1521,199 +1701,6 @@ bool MQ2SpellsType::GETMEMBER()
 				returnValue = ConfigureSpells();
 				break;
 			}
-		}
-	}
-	
-	return returnValue;
-}
-std::vector<std::string> SplitString(const std::string &s, char delim) {
-	std::stringstream ss(s);
-	std::string item;
-	std::vector<std::string> tokens;
-	while (getline(ss, item, delim)) {
-		tokens.push_back(item);
-	}
-	return tokens;
-}
-
-MQ2QueueType::MQ2QueueType() :MQ2Type("QueueType")
-{
-	TypeMember(Peek);
-	TypeMember(Pop);
-	TypeMember(Empty);
-	TypeMethod(Push);
-	TypeMethod(PushVar);
-	TypeMethod(Clear);
-}
-
-bool MQ2QueueType::GetMember(MQ2VARPTR VarPtr, PCHAR Member, PCHAR Index, MQ2TYPEVAR& Dest)
-{
-	bool returnValue = false;
-	auto* pMember = FindMember(Member);
-	if (pMember)
-	{
-		auto queue = static_cast<std::queue<int>*>(VarPtr.Ptr);
-		switch (static_cast<QueueTypeMembers>(pMember->ID)) {
-		case Peek:
-			Dest.Type = pIntType;
-			if (!queue->empty())
-			{
-				Dest.DWord = queue->front();
-			} 
-			else
-			{
-				Dest.DWord = 0;
-			}
-			returnValue = true;
-			break;
-		case Pop:
-			Dest.Type = pIntType;
-			if (!queue->empty())
-			{
-				Dest.DWord = queue->front();
-				queue->pop();
-			}
-			else
-			{
-				Dest.DWord = 0;
-			}
-			returnValue = true;
-			break;
-		case Empty:
-			Dest.DWord = queue->empty();
-			Dest.Type = pBoolType;
-			returnValue = true;
-			break;
-		}
-	}
-	else
-	{
-		auto* pMethod = FindMethod(Member);
-		if (pMethod)
-		{
-			std::queue<int>* queue = static_cast<std::queue<int>*>(VarPtr.Ptr);
-			switch (static_cast<QueueTypeMethods>(pMethod->ID))
-			{
-			case Push:
-				if (ISINDEX() && ISNUMBER())
-				{
-					queue->push(GETNUMBER());
-					returnValue = true;
-				}
-				break;
-			case Clear:
-				while (!queue->empty())
-					queue->pop();
-				returnValue = true;
-				break;
-			default:;
-			}
-		}
-	}
-
-	return returnValue;
-}
-
-bool QueueCollectionType::Lookup(PCHAR Index, MQ2TYPEVAR& Dest)
-{
-	const auto index = std::string(Index);
-	auto queue = _queues.find(index);
-	if (queue != _queues.end())
-	{
-		Dest.Ptr = &(queue->second);
-		Dest.Type = pQueueType;
-
-	}
-	else
-	{
-		Dest.DWord = 0;
-		Dest.Type = pBoolType;
-	}
-	return true;
-}
-
-QueueCollectionType::QueueCollectionType() :MQ2Type("QueueCollection")
-{
-	TypeMethod(Add);
-	TypeMethod(Remove);
-	TypeMethod(Clear);
-	TypeMember(Size);
-	TypeMember(Contains);
-}
-
-bool QueueCollectionType::GetMember(MQ2VARPTR VarPtr, PCHAR Member, PCHAR Index, MQ2TYPEVAR& Dest)
-{
-	auto returnValue = false;
-	auto* pMethod = FindMethod(Member);
-	if (pMethod)
-	{
-		switch (static_cast<QueueCollectionTypeMethods>(pMethod->ID))
-		{
-		case Add:
-			if (ISINDEX())
-			{
-				auto index = std::string(Index);
-				_queues.insert_or_assign(index, std::queue<int>());
-				returnValue = true;
-			}
-			break;
-		case Remove:
-			if (ISINDEX())
-			{
-				const auto index = std::string(Index);
-				const auto queue = _queues.find(index);
-				if (queue != _queues.end())
-				{
-					_queues.erase(queue);
-					returnValue = true;
-				}
-			}
-			break;
-		case Clear:
-			_queues.clear();
-			returnValue = true;
-			break;
-		}
-	}
-	else
-	{
-		auto* pMember = FindMember(Member);
-		if (pMember)
-		{
-			switch (static_cast<QueueCollectionTypeMembers>(pMember->ID))
-			{
-			case Size:
-				Dest.DWord = _queues.size();
-				Dest.Type = pIntType;
-				returnValue = true;
-				break;
-			case Contains:
-				if (ISINDEX())
-				{
-					const auto index = std::string(Index);
-					returnValue = true;
-					Dest.DWord = _queues.find(index) != _queues.end();
-					Dest.Type = pBoolType;
-				}
-				break;
-			}
-		}
-		else if (ISINDEX())
-		{
-			const auto index = std::string(Index);
-			auto queue = _queues.find(index);
-			if (queue != _queues.end())
-			{
-				Dest.Ptr = &(queue->second);
-				Dest.Type = pQueueType;
-
-			}
-			else
-			{
-				Dest.DWord = 0;
-				Dest.Type = pBoolType;
-			}
-			returnValue = true;
 		}
 	}
 

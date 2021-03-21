@@ -42,10 +42,10 @@ enum class EQCombatState
 union byteConverter
 {
 	int Int;
-	__int64 Int64;
+	long long Int64;
 	unsigned long ULong;
 	float Float;
-	unsigned __int64 UInt64;
+	unsigned long long UInt64;
 	byte Byte;
 	short Short;
 	unsigned short UShort;
@@ -67,15 +67,15 @@ private:
 	std::string _characterName;
 	std::string _id;
 	std::vector<byte> _idBuffer;
-	unsigned __int64 _joinAttemptDelay = 0;
-	unsigned __int64 _nextTargetUpdate = 0;
-	unsigned __int64 _nextSelfUpdate = 0;
-	unsigned __int64 _nextPetUpdate = 0;
-	unsigned __int64 _nextGroupUpdate = 0;
-	unsigned __int64 _nextXTargetUpdate = 0;
-	unsigned __int64 _nextStatUpdate = 0;
-	unsigned __int64 _nextInventoryUpdate = 0;
-	unsigned __int64 _nextSpawnUpdate = 0;
+	unsigned long long _joinAttemptDelay = 0;
+	unsigned long long _nextTargetUpdate = 0;
+	unsigned long long _nextSelfUpdate = 0;
+	unsigned long long _nextPetUpdate = 0;
+	unsigned long long _nextGroupUpdate = 0;
+	unsigned long long _nextXTargetUpdate = 0;
+	unsigned long long _nextStatUpdate = 0;
+	unsigned long long _nextInventoryUpdate = 0;
+	unsigned long long _nextSpawnUpdate = 0;
 	int _xTargetUpdateInterval = 16;
 	int _selfUpdateInterval = 16;
 	int _petUpdateInterval = 16;
@@ -90,14 +90,14 @@ private:
 	static float GetFloat(std::vector<byte>& buffer, int offset);
 	static unsigned int GetUInt(std::vector<byte>& buffer, int offset);
 	static unsigned long GetULong(std::vector<byte>& buffer, int offset);
-	static __int64 GetInt64(std::vector<byte>& buffer, int offset);
+	static long long GetInt64(std::vector<byte>& buffer, int offset);
 	static std::string GetString(std::vector<byte>& buffer, int offset);
 	static void InsertIntoBuffer(std::vector<unsigned char>& buffer, const byteConverter& bytes, int length);
 	static void GetBytes(std::vector<byte>& buffer, int value);
 	static void GetBytes(std::vector<byte>& buffer, float value);
 	static void GetBytes(std::vector<byte>& buffer, unsigned int value);
 	static void GetBytes(std::vector<byte>& buffer, unsigned long value);
-	static void GetBytes(std::vector<byte>& buffer, __int64 value);
+	static void GetBytes(std::vector<byte>& buffer, long long value);
 	static void GetBytes(std::vector<byte>& buffer, const std::string& value);
 	static void GetBytes(std::vector<byte>& buffer, char string[], int length);
 	static int GetCharacterState(_SPAWNINFO* characterSpawn);

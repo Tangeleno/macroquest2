@@ -44,7 +44,7 @@ unsigned long EQRelay::GetULong(std::vector<byte>& buffer, const int offset)
 	return converter.ULong;
 }
 
-__int64 EQRelay::GetInt64(std::vector<byte>& buffer, const int offset)
+long long EQRelay::GetInt64(std::vector<byte>& buffer, const int offset)
 {
 	byteConverter converter{};
 	memset(&converter, 0, sizeof(byteConverter));
@@ -77,14 +77,8 @@ void EQRelay::InsertIntoBuffer(std::vector<unsigned char>& buffer, const byteCon
 void EQRelay::GetBytes(std::vector<byte>& buffer, const int value)
 {
 	byteConverter converter{};
-	union
-	{
-		int Int;
-		byte Raw[4];
-	} test{};
 	memset(&converter, 0, sizeof(byteConverter));
 	converter.Int = value;
-	test.Int = value;
 	InsertIntoBuffer(buffer, converter, 4);
 }
 
@@ -96,7 +90,7 @@ void EQRelay::GetBytes(std::vector<byte>& buffer, const unsigned int value)
 	InsertIntoBuffer(buffer, converter, 4);
 }
 
-void EQRelay::GetBytes(std::vector<byte>& buffer, const __int64 value)
+void EQRelay::GetBytes(std::vector<byte>& buffer, const long long value)
 {
 	byteConverter converter{};
 	memset(&converter, 0, sizeof(byteConverter));
@@ -144,7 +138,7 @@ void EQRelay::GetBytes(std::vector<byte>& buffer,const float value)
 
 int EQRelay::GetCharacterState(_SPAWNINFO* const characterSpawn)
 {
-	EQCharacterState state = EQCharacterState::Unknown;
+	EQCharacterState state;
 	if (characterSpawn->PlayerState & 0x20)
 		state = EQCharacterState::Stun;
 	else if (characterSpawn->RespawnTimer)
@@ -215,7 +209,7 @@ int EQRelay::GetPctHPs(_SPAWNINFO* const spawn)
 
 void EQRelay::SelfUpdate(std::vector<byte>& buffer) const
 {
-	const auto characterSpawn = reinterpret_cast<PSPAWNINFO>(pLocalPlayer);
+	auto *const characterSpawn = reinterpret_cast<PSPAWNINFO>(pLocalPlayer);
 	GetBytes(buffer, characterSpawn->SpawnID);
 	GetBytes(buffer, *EQADDR_ATTACK);
 	GetBytes(buffer, gAutoFire);
@@ -235,7 +229,7 @@ void EQRelay::SelfUpdate(std::vector<byte>& buffer) const
 	GetBytes(buffer, characterSpawn->X);
 	GetBytes(buffer, characterSpawn->Y);
 	GetBytes(buffer, characterSpawn->Z);
-	auto characterInfo2 = GetCharInfo2();
+	auto *characterInfo2 = GetCharInfo2();
 	auto buffCount = 0;
 	const int maxBuffs = GetCharMaxBuffSlots();
 	for (auto i = 0; i < maxBuffs; ++i)
@@ -246,7 +240,7 @@ void EQRelay::SelfUpdate(std::vector<byte>& buffer) const
 	GetBytes(buffer, buffCount);
 	if(buffCount)
 	{
-		for (int i = 0; i < maxBuffs; ++i)
+		for (auto i = 0; i < maxBuffs; ++i)
 		{
 			if (characterInfo2->Buff[i].SpellID > 0)
 			{
@@ -309,15 +303,15 @@ void EQRelay::PetUpdate(std::vector<byte>& buffer) const
 	GetBytes(buffer, petSpawn->mActorClient.Class);
 	GetBytes(buffer, petSpawn->Name);
 	auto buffCount = 0;
-	const auto petWindow = reinterpret_cast<PEQPETINFOWINDOW>(pPetInfoWnd);
-	for (int i = 0; i < NUM_BUFF_SLOTS; ++i)
+	auto *const petWindow = reinterpret_cast<PEQPETINFOWINDOW>(pPetInfoWnd);
+	for (int i : petWindow->Buff)
 	{
-		if (petWindow->Buff[i] == 0xFFFFFFFF || petWindow->Buff[i] == 0)
+		if (i == 0xFFFFFFFF || i == 0)
 			continue;
 		buffCount++;
 	}
 	GetBytes(buffer, buffCount);
-	for (int i = 0; i < NUM_BUFF_SLOTS; ++i)
+	for (auto i = 0; i < NUM_BUFF_SLOTS; ++i)
 	{
 		if (petWindow->Buff[i] == 0xFFFFFFFF || petWindow->Buff[i] == 0)
 			continue;
@@ -332,20 +326,20 @@ void EQRelay::TargetUpdate(std::vector<byte>& buffer) const
 {
 	if (pTarget)
 	{
-		const auto pSpawn = reinterpret_cast<PSPAWNINFO>(pTarget);
+		auto *const pSpawn = reinterpret_cast<PSPAWNINFO>(pTarget);
 		GetBytes(buffer, pSpawn->SpawnID);
 		GetBytes(buffer, pAggroInfo->aggroData[AD_Player].AggroPct);
 		GetBytes(buffer, pAggroInfo->aggroData[AD_Secondary].AggroPct);
 		GetBytes(buffer, pAggroInfo->AggroSecondaryID);
 		if (gTargetbuffs)
 		{
-			int buffCount = 0;
-			auto targetWnd = reinterpret_cast<PCTARGETWND>(pTargetWnd);
-			for (int buff : targetWnd->BuffSpellID)
+			auto buffCount = 0;
+			auto *targetWnd = reinterpret_cast<PCTARGETWND>(pTargetWnd);
+			for (auto buff : targetWnd->BuffSpellID)
 				if (buff)
 					buffCount++;
 			GetBytes(buffer, buffCount);
-			for (int i = 0; i < NUM_BUFF_SLOTS; ++i)
+			for (auto i = 0; i < NUM_BUFF_SLOTS; ++i)
 			{
 				const auto buffId = targetWnd->BuffSpellID[i];
 				if (buffId)
@@ -369,9 +363,9 @@ void EQRelay::TargetUpdate(std::vector<byte>& buffer) const
 
 void EQRelay::SpawnUpdate(std::vector<byte>& buffer) const
 {
-	const auto characterInfo = GetCharInfo();
+	auto *const characterInfo = GetCharInfo();
 	GetBytes(buffer, characterInfo->zoneId & 0x7FFF);
-	auto spawn = pSpawnList;
+	auto *spawn = pSpawnList;
 	while (spawn)
 	{
 		GetBytes(buffer, spawn->SpawnID);
@@ -387,12 +381,12 @@ void EQRelay::SpawnUpdate(std::vector<byte>& buffer) const
 
 void EQRelay::GroupUpdate(std::vector<byte>& buffer) const
 {
-	const auto characterInfo = GetCharInfo();
+	auto *const characterInfo = GetCharInfo();
 	if(characterInfo->pGroupInfo)
 	{
-		int groupCount = 0;
+		auto groupCount = 0;
 		std::vector<std::string> groupMemberIds;
-		CHAR Name[MAX_STRING] = { 0 };
+		CHAR name[MAX_STRING] = { 0 };
 		for (auto i = 1; i < 6; ++i)
 		{
 			if (characterInfo->pGroupInfo->pMember[i])
@@ -405,9 +399,9 @@ void EQRelay::GroupUpdate(std::vector<byte>& buffer) const
 		{
 			if (characterInfo->pGroupInfo->pMember[i])
 			{
-				GetCXStr(characterInfo->pGroupInfo->pMember[i]->pName, Name, MAX_STRING);
-				CleanupName(Name, sizeof Name, FALSE, FALSE);
-				GetBytes(buffer, _serverName + "." + Name);
+				GetCXStr(characterInfo->pGroupInfo->pMember[i]->pName, name, MAX_STRING);
+				CleanupName(name, sizeof name, FALSE, FALSE);
+				GetBytes(buffer, _serverName + "." + name);
 			}
 		}
 				
@@ -498,7 +492,6 @@ void EQRelay::HandleReceive()
 			case EQTopics::ZoneRequest:
 				ZonedUpdate(false);
 				break;
-			default: break;
 			}
 		}
 	}
@@ -522,7 +515,7 @@ void EQRelay::ZonedUpdate(const bool zoneStart)
 		_zmq.Subscribe(_zoneName);
 		SetIdBuffer();
 		auto* const spawnInfo = reinterpret_cast<PSPAWNINFO>(pLocalPlayer);
-		_currentZoneId = spawnInfo->GetZoneID() & 0x7FFF;;
+		_currentZoneId = spawnInfo->GetZoneID() & 0x7FFF;
 		GetBytes(buffer, _currentZoneId);
 		GetBytes(buffer, reinterpret_cast<PZONEINFO>(pZoneInfo)->ShortName);
 		GetBytes(buffer, spawnInfo->SpawnID);
@@ -671,10 +664,10 @@ void EQRelay::Pulse()
 
 void EQRelay::FullSpawnUpdate(std::vector<byte>& buffer) const
 {
-	const auto characterInfo = GetCharInfo();
+	auto* const characterInfo = GetCharInfo();
 	GetBytes(buffer, characterInfo->zoneId & 0x7FFF);
-	auto spawn = pSpawnList;
-	int spawnCount =0;
+	auto* spawn = pSpawnList;
+	auto spawnCount =0;
 	while (spawn)
 	{
 		spawnCount++;
@@ -826,7 +819,7 @@ void EQRelay::AddSpawn(PSPAWNINFO spawn)
 
 	if (_zoning || !_welcomed || _currentGameState != EQGameState::InGame)
 		return;
-	const auto character = static_cast<PCHARINFO>(GetCharInfo());
+	auto* const character = static_cast<PCHARINFO>(GetCharInfo());
 	if(spawn->SpawnID!=0 && character->pSpawn!=spawn)
 	{
 		std::vector<byte> buffer;
@@ -857,7 +850,7 @@ void EQRelay::RemoveSpawn(const PSPAWNINFO spawn)
 {	
 	if (_zoning || !_welcomed || _currentGameState != EQGameState::InGame)
 		return;
-	if(const auto character = GetCharInfo())
+	if(auto* const character = GetCharInfo())
 	{
 		std::vector<byte> buffer;
 		GetBytes(buffer, character->zoneId & 0x7FFF);
@@ -914,6 +907,7 @@ void EQRelay::ForceUpdate(const EQTopics topic)
 		_zmq.AppendTopic(topic, buffer, _idBuffer);
 		_zmq.Send();
 		break;
-	default:;
+	default:
+		break;
 	}
 }

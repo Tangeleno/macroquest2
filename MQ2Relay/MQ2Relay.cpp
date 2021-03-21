@@ -1,14 +1,7 @@
-// MQ2Relay.cpp : Defines the entry point for the DLL application.
-//
-
-// PLUGIN_API is only to be used for callbacks.  All existing callbacks at this time
-// are shown below. Remove the ones your plugin does not use.  Always use Initialize
-// and Shutdown for setup and cleanup, do NOT do it in DllMain.
-
 #include "MQ2Relay.h"
 PreSetup("MQ2Relay");
 
-EQRelay relay;
+EQRelay Relay;
 
 void SetInterval(PSPAWNINFO pChar, PCHAR szLine) {
 	CHAR szCmd[MAX_STRING] = { 0 };
@@ -21,41 +14,41 @@ void SetInterval(PSPAWNINFO pChar, PCHAR szLine) {
 		return;
 	}
 	int newInterval = atoi(Arg2);
-	relay.SetInterval(Arg1, newInterval);;
+	Relay.SetInterval(Arg1, newInterval);;
 }
 
 
 void ForceStatUpdate(PSPAWNINFO pChar, PCHAR szLine)
 {
-	relay.ForceUpdate(EQTopics::StatUpdate);
+	Relay.ForceUpdate(EQTopics::StatUpdate);
 }
 void ForceSelfUpdate(PSPAWNINFO pChar, PCHAR szLine)
 {
-	relay.ForceUpdate(EQTopics::SelfUpdate);
+	Relay.ForceUpdate(EQTopics::SelfUpdate);
 }
 void ForceTargetUpdate(PSPAWNINFO pChar, PCHAR szLine)
 {
-	relay.ForceUpdate(EQTopics::TargetUpdate);
+	Relay.ForceUpdate(EQTopics::TargetUpdate);
 }
 void ForceAnnounce(PSPAWNINFO pChar, PCHAR szLine)
 {
-	relay.DoAnnounce();
+	Relay.DoAnnounce();
 }
 void ForcePetUpdate(PSPAWNINFO pChar, PCHAR szLine)
 {
-	relay.ForceUpdate(EQTopics::PetUpdate);
+	Relay.ForceUpdate(EQTopics::PetUpdate);
 }
 void ForceGroupUpdate(PSPAWNINFO pChar, PCHAR szLine)
 {
-	relay.ForceUpdate(EQTopics::GroupUpdate);
+	Relay.ForceUpdate(EQTopics::GroupUpdate);
 }
 void ForceSpawnUpdate(PSPAWNINFO pChar, PCHAR szLine)
 {
-	relay.ForceUpdate(EQTopics::SpawnUpdate);
+	Relay.ForceUpdate(EQTopics::SpawnUpdate);
 }
 void ForceXTargetUpdate(PSPAWNINFO pChar, PCHAR szLine)
 {
-	relay.ForceUpdate(EQTopics::XTargetUpdate);
+	Relay.ForceUpdate(EQTopics::XTargetUpdate);
 }
 
 PLUGIN_API VOID InitializePlugin(VOID)
@@ -71,14 +64,14 @@ PLUGIN_API VOID InitializePlugin(VOID)
 	AddCommand("/spawnupdate", ForceSpawnUpdate, 0, 1);
 	AddCommand("/xtargetupdate", ForceXTargetUpdate, 0, 1);
 	AddCommand("/forceannounce", ForceAnnounce, 0, 1);
-	relay.Initialize("tcp://localhost:8844", "tcp://localhost:8845");
+	Relay.Initialize("tcp://localhost:8844", "tcp://localhost:8845");
 }
 
 // Called once, when the plugin is to shutdown
 PLUGIN_API VOID ShutdownPlugin(VOID)
 {
     DebugSpewAlways("Shutting down MQ2Relay");
-	relay.Shutdown();
+	Relay.Shutdown();
 	RemoveCommand("/setinterval");
 	RemoveCommand("/statupdate");
 	RemoveCommand("/selfupdate");
@@ -94,27 +87,27 @@ PLUGIN_API VOID ShutdownPlugin(VOID)
 // Called after entering a new zone
 PLUGIN_API VOID OnZoned()
 {
-	relay.ZonedUpdate(false);
+	Relay.ZonedUpdate(false);
 }
 
 // Called once directly after initialization, and then every time the gamestate changes
 PLUGIN_API VOID SetGameState(DWORD GameState)
 {
-	relay.SetGameState(static_cast<EQGameState>(GameState));
+	Relay.SetGameState(static_cast<EQGameState>(GameState));
 }
 
 
 // This is called every time MQ pulses
 PLUGIN_API VOID OnPulse(VOID)
 {
-	relay.Pulse();
+	Relay.Pulse();
 }
 
 // This is called every time EQ shows a line of chat with CEverQuest::dsp_chat,
 // but after MQ filters and chat events are taken care of.
 PLUGIN_API DWORD OnIncomingChat(PCHAR Line, DWORD Color)
 {
-	relay.IncomingChat(Line, Color);
+	Relay.IncomingChat(Line, Color);
 	return 0;
 }
 
@@ -124,7 +117,7 @@ PLUGIN_API DWORD OnIncomingChat(PCHAR Line, DWORD Color)
 PLUGIN_API VOID OnAddSpawn(PSPAWNINFO pNewSpawn)
 {
 	if (pNewSpawn)
-		relay.AddSpawn(pNewSpawn);
+		Relay.AddSpawn(pNewSpawn);
 }
 
 // This is called each time a spawn is removed from a zone (removed from EQ's list of spawns).
@@ -132,7 +125,7 @@ PLUGIN_API VOID OnAddSpawn(PSPAWNINFO pNewSpawn)
 PLUGIN_API VOID OnRemoveSpawn(PSPAWNINFO pSpawn)
 {
 	if (pSpawn)
-		relay.RemoveSpawn(pSpawn);
+		Relay.RemoveSpawn(pSpawn);
 }
 
 // This is called each time a ground item is added to a zone
@@ -140,20 +133,20 @@ PLUGIN_API VOID OnRemoveSpawn(PSPAWNINFO pSpawn)
 // NOTE: When you zone, these will come BEFORE OnZoned
 PLUGIN_API VOID OnAddGroundItem(PGROUNDITEM pNewGroundItem)
 {
-	relay.AddSpawn(pNewGroundItem);
+	Relay.AddSpawn(pNewGroundItem);
 }
 
 // This is called each time a ground item is removed from a zone
 // It is NOT called for each existing ground item when a plugin shuts down.
 PLUGIN_API VOID OnRemoveGroundItem(PGROUNDITEM pGroundItem)
 {
-	relay.RemoveSpawn(pGroundItem);
+	Relay.RemoveSpawn(pGroundItem);
 }
 
 // This is called when we receive the EQ_BEGIN_ZONE packet is received
 PLUGIN_API VOID OnBeginZone(VOID)
 {
-	relay.ZonedUpdate(true);
+	Relay.ZonedUpdate(true);
 }
 
 // This is called when we receive the EQ_END_ZONE packet is received

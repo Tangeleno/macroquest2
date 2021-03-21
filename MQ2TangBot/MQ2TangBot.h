@@ -4,7 +4,6 @@
 #define ISNUMBER() (IsNumber(Index))
 #define GETNUMBER() (atoi(Index))
 #define GETFIRST() Index
-std::vector<std::string> SplitString(const std::string &s, char delim);
 class MQ2TangBotType *pTangBotType = 0;
 class MQ2SpellsType *pSpellsType = 0;
 class MQ2QueueType *pQueueType=0;
@@ -376,11 +375,16 @@ private:
 	void ConfigureCombatAbilities(PSPAWNINFO pSpawn, int characterClass);
 	void SetAxes(PSPAWNINFO pSpawn,const std::string& spellType,std::unordered_map<int,PSPELL>& axeSpells);
 	void SetSpell(std::string spellType, PSPELL spell, int characterClass);
-	void SetMezSpell(const std::string& spellType, PSPELL spell, int characterClass);
+	static bool IsWorseMezSpell(_SPELL* const currentWorst, _SPELL* const compareTo, PSPAWNINFO spawnInfo);
+	void SetMezSpell(PSPELL spell, int characterClass);
+	void SetStunSpell(PSPELL spell, int characterClass);
+	static bool IsWorseStunSpell(_SPELL* currentWorst, _SPELL* compareTo, int characterClass);
 	static long long GetCastTime(PSPELL spell);
 public:
 	std::unordered_map<std::string, PSPELL> Spells;
 	MQ2SpellsType();
+	static bool IsWorseJoltSpell(_SPELL* const currentWorst, _SPELL* const compareTo, int characterClass);
+	void SetJoltSpell(_SPELL* spell, int characterClass);
 	bool ConfigureSpells();
 	void EchoSpells();
 
@@ -390,61 +394,6 @@ public:
 	enum SpellsMethods {
 		FindSpells,
 	};
-	bool GETMEMBER() override;
-	bool ToString(MQ2VARPTR VarPtr, PCHAR Destination) override
-	{
-		strcpy_s(Destination, MAX_STRING, "TRUE");
-		return true;
-	}
-	bool FromData(MQ2VARPTR &VarPtr, MQ2TYPEVAR &Source) override {
-		return false;
-	}
-	bool FromString(MQ2VARPTR &VarPtr, PCHAR Source) override {
-		return false;
-	}
-};
-class MQ2QueueType :public MQ2Type
-{
-public:
-	enum QueueTypeMembers {
-		Peek,
-		Pop,
-		Empty
-	};
-	enum QueueTypeMethods {
-		Push, PushVar, Clear
-	};
-	MQ2QueueType();
-	bool GETMEMBER() override;
-	bool ToString(MQ2VARPTR VarPtr, PCHAR Destination) override
-	{
-		strcpy_s(Destination, MAX_STRING, "TRUE");
-		return true;
-	}
-	bool FromData(MQ2VARPTR &VarPtr, MQ2TYPEVAR &Source) override {
-		return false;
-	}
-	bool FromString(MQ2VARPTR &VarPtr, PCHAR Source) override {
-		return false;
-	}
-
-
-};
-class QueueCollectionType :public MQ2Type
-{
-private:
-	std::unordered_map<std::string, std::queue<int>> _queues;
-public:
-	bool Lookup(PCHAR Index, MQ2TYPEVAR& Dest);
-	enum QueueCollectionTypeMethods
-	{
-		Add, Remove, Clear
-	};
-	enum QueueCollectionTypeMembers
-	{
-		Size, Contains
-	};
-	QueueCollectionType();
 	bool GETMEMBER() override;
 	bool ToString(MQ2VARPTR VarPtr, PCHAR Destination) override
 	{
