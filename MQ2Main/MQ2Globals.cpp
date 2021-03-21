@@ -275,7 +275,7 @@ namespace MQ2Globals
 		ppLargeDialog = (CLargeDialogWnd**)pinstCLargeDialogWnd;
 		ppItemDisplayManager = (CItemDisplayManager**)pinstCItemDisplayManager;
 		ppEqSoundManager = (EqSoundManager**)pinstEQSoundManager;
-
+		eqlib::InitializeEQLib();
 		if (unsigned long eqgdx9 = (unsigned long)GetModuleHandle("EQGraphicsDX9.dll")) {
 			//MessageBox(NULL, "__eqgraphics_fopen", "Attach", MB_SYSTEMMODAL | MB_OK);
 			unsigned long addr = FindPattern(eqgdx9, 0x200000, efPattern, efMask);
@@ -1961,6 +1961,7 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(CListWnd__GetCurSel);
 	INITIALIZE_EQGAME_OFFSET(CListWnd__GetItemAtPoint);
 	INITIALIZE_EQGAME_OFFSET(CListWnd__GetItemAtPoint1);
+	INITIALIZE_EQGAME_OFFSET(CListWnd__GetItemColor);
 	INITIALIZE_EQGAME_OFFSET(CListWnd__GetItemData);
 	INITIALIZE_EQGAME_OFFSET(CListWnd__GetItemHeight);
 	INITIALIZE_EQGAME_OFFSET(CListWnd__GetItemIcon);
@@ -1991,7 +1992,8 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(CMapViewWnd__CMapViewWnd);
     INITIALIZE_EQGAME_OFFSET(CMapViewWnd__HandleLButtonDown);
     INITIALIZE_EQGAME_OFFSET(CMapViewWnd__GetWorldCoordinates);
-
+    INITIALIZE_EQGAME_OFFSET(CMapViewWnd__WndNotification);
+	
 	INITIALIZE_EQGAME_OFFSET(CMerchantWnd__DisplayBuyOrSellPrice);
 	INITIALIZE_EQGAME_OFFSET(CMerchantWnd__PurchasePageHandler__RequestGetItem);
 	INITIALIZE_EQGAME_OFFSET(CMerchantWnd__PurchasePageHandler__RequestPutItem);
@@ -2203,6 +2205,7 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(EQ_Character__GetAdjustedSkill);
 	INITIALIZE_EQGAME_OFFSET(EQ_Character__GetBaseSkill);
 	INITIALIZE_EQGAME_OFFSET(EQ_Character__CanUseItem);
+	INITIALIZE_EQGAME_OFFSET(EQ_Character__CanMedOnHorse);
 #ifdef BaseProfile__GetItemPossession_x
 	INITIALIZE_EQGAME_OFFSET(BaseProfile__GetItemPossession);
 #endif
@@ -2362,7 +2365,8 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(EQ_Spell__IsLullSpell);
 	INITIALIZE_EQGAME_OFFSET(__IsResEffectSpell);
 	INITIALIZE_EQGAME_OFFSET(EQ_Affect__GetAffectData);
-
+	INITIALIZE_EQGAME_OFFSET(EQ_Affect__SetAffectData);
+	
 	INITIALIZE_EQGAME_OFFSET(CharacterZoneClient__CalcAffectChange);
 	INITIALIZE_EQGAME_OFFSET(CharacterZoneClient__CalcAffectChangeGeneric);
 	INITIALIZE_EQGAME_OFFSET(CharacterZoneClient__GetFocusReuseMod);
@@ -2423,6 +2427,8 @@ namespace MQ2Globals
 	INITIALIZE_EQGAME_OFFSET(CColorPickerWnd__Open);
 	INITIALIZE_EQGAME_OFFSET(CGroupWnd__WndNotification);
 	INITIALIZE_EQGAME_OFFSET(CGroupWnd__UpdateDisplay);
+	INITIALIZE_EQGAME_OFFSET(__eq_new);
+	INITIALIZE_EQGAME_OFFSET(__eq_delete);
 	DWORD __eqgraphics_fopen = 0;
 
 #ifdef __IsResEffectSpell_x

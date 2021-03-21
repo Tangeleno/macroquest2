@@ -1397,6 +1397,7 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD CListWnd__GetCurSel;
 	EQLIB_VAR DWORD CListWnd__GetItemAtPoint;
 	EQLIB_VAR DWORD CListWnd__GetItemAtPoint1;
+	EQLIB_VAR DWORD CListWnd__GetItemColor;
 	EQLIB_VAR DWORD CListWnd__GetItemData;
 	EQLIB_VAR DWORD CListWnd__GetItemHeight;
 	EQLIB_VAR DWORD CListWnd__GetItemIcon;
@@ -1427,7 +1428,8 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD CMapViewWnd__CMapViewWnd;
     EQLIB_VAR DWORD CMapViewWnd__GetWorldCoordinates;
     EQLIB_VAR DWORD CMapViewWnd__HandleLButtonDown;
-
+    EQLIB_VAR DWORD CMapViewWnd__WndNotification;
+	
 	EQLIB_VAR DWORD CMerchantWnd__DisplayBuyOrSellPrice;
 	EQLIB_VAR DWORD CMerchantWnd__PurchasePageHandler__RequestGetItem;
 	EQLIB_VAR DWORD CMerchantWnd__PurchasePageHandler__RequestPutItem;
@@ -1627,6 +1629,7 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD EQ_Character__GetAdjustedSkill;
 	EQLIB_VAR DWORD EQ_Character__GetBaseSkill;
 	EQLIB_VAR DWORD EQ_Character__CanUseItem;
+	EQLIB_VAR DWORD EQ_Character__CanMedOnHorse;
 	EQLIB_VAR DWORD BaseProfile__GetItemPossession;
 	
 	EQLIB_VAR DWORD ArrayClass__DeleteElement;
@@ -1796,7 +1799,7 @@ namespace MQ2Globals
 	
 	EQLIB_VAR DWORD __IsResEffectSpell;
 	EQLIB_VAR DWORD EQ_Affect__GetAffectData;
-
+	EQLIB_VAR DWORD EQ_Affect__SetAffectData;
 	EQLIB_VAR DWORD CharacterZoneClient__CalcAffectChangeGeneric;
 	EQLIB_VAR DWORD CharacterZoneClient__GetFocusReuseMod;
 	EQLIB_VAR DWORD CharacterZoneClient__CalcAffectChange;
@@ -1844,6 +1847,8 @@ namespace MQ2Globals
 	EQLIB_VAR DWORD CEQSuiteTextureLoader__GetTexture;
 	EQLIB_VAR DWORD CSidlManagerBase__FindButtonDrawTemplate;
 	EQLIB_VAR DWORD CSidlManagerBase__FindButtonDrawTemplate1;
+	EQLIB_VAR DWORD __eq_new;
+	EQLIB_VAR DWORD __eq_delete;
 	EQLIB_VAR DWORD __eqgraphics_fopen;
 
 	const std::string PARSE_PARAM_BEG = "${Parse[";
