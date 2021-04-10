@@ -341,7 +341,8 @@ public:
 		CampRadius,
 		CheckImmune,
 		LastGroupMemberHP,
-		GroupMemberByHP
+		GroupMemberByHP,
+		TimeStamp
 	};
 	enum TangBotMethods {
 		SetCamp,
@@ -385,6 +386,7 @@ public:
 	MQ2SpellsType();
 	static bool IsWorseJoltSpell(_SPELL* const currentWorst, _SPELL* const compareTo, int characterClass);
 	void SetJoltSpell(_SPELL* spell, int characterClass);
+	void SetCharmSpell(_SPELL* spell, int characterClass);
 	bool ConfigureSpells();
 	void EchoSpells();
 

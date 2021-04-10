@@ -1,6 +1,7 @@
 #include "MQ2TangBot.h"
 #include <iterator>
 #include <sstream>
+#include <chrono>
 
 BOOL DataTangBot(PCHAR Index, MQ2TYPEVAR& dest) {
 	dest.DWord = 1;
@@ -91,6 +92,8 @@ MQ2TangBotType::MQ2TangBotType() :MQ2Type("TangBot") {
 	TypeMember(FindXTarget);
 	TypeMember(SpawnInXTarget);
 	TypeMember(CampRadius);
+	TypeMember(TimeStamp);
+
 	TypeMember(CheckImmune);
 	TypeMethod(SetCamp);
 	TypeMethod(OrderGroup);
@@ -413,6 +416,11 @@ bool MQ2TangBotType::GETMEMBER() {
 				}
 			}
 			break;
+		case TimeStamp:
+			Dest.Type = pInt64Type;
+			Dest.Int64 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			returnValue = true;
+			break;
 		default:;
 		}
 	}
@@ -672,6 +680,10 @@ bool MQ2SpellsType::ConfigureSpells() {
 					break;
 				case SpellSubCategories::Fire:
 					spellType = "Fire";
+					if (characterClass == EQCharacterClasses::Magician && strstr(spell->Name, "Fickle"))
+					{
+						spellType = "Fickle";
+					}
 					break;
 				case SpellSubCategories::Summoned:
 					spellType = "Summoned";
@@ -710,6 +722,38 @@ bool MQ2SpellsType::ConfigureSpells() {
 					break;
 				}
 				//03=Group v1, 04=PB AE, 05=Single, 06=Self, 08=Targeted AE, 0e=Pet, 28=AE PC v2, 29=Group v2, 2a=Directional
+				if (characterClass == EQCharacterClasses::Wizard && spell->TargetType == TargetTypes::Single)
+				{
+					switch (spell->Subcategory)
+					{
+					case SpellSubCategories::Cold:
+					case SpellSubCategories::Fire:
+					case SpellSubCategories::Magic:
+						if (strstr(spell->Name, "Wildmagic"))
+						{
+							spellType = "Wildmagic";
+							
+						} else if (spell->CastTime < 1000)
+						{
+							spellType.insert(0, "Quick");
+						}
+						else if (strstr(spell->Name, "Lure") || strstr(spell->Name, "lure"))
+						{
+							spellType += "Lure";
+						}
+						else if (strstr(spell->Name, "Energy"))
+						{
+							spellType += "Fickle";
+						}
+						else if (strstr(spell->Name, "Mindfreeze"))
+						{
+							spellType = "Jolt";
+						}
+						break;
+					default: break;
+					}
+				}
+				
 				if (!ignoreType && spellType[0]) {
 					switch (spell->TargetType)
 					{
@@ -721,17 +765,22 @@ bool MQ2SpellsType::ConfigureSpells() {
 					case TargetTypes::Single://Single
 						spellType += "Nuke";
 						break;
+					case TargetTypes::LineofSight:
+						spellType += "Bolt";
+						break;
 					case TargetTypes::AESummoned:
 					case TargetTypes::AEUndead:
 					case TargetTypes::TargetedAE://TargetedAE
 						spellType += "Rain";
 						break;
-					case TargetTypes::Self://Self
-					case TargetTypes::Pet://Pet
-					case TargetTypes::AEPCv2://AE PC v2
-					case TargetTypes::Groupv2://GroupV2
 					case TargetTypes::DirectionalAE://Directional
-					case TargetTypes::Groupv1://Groupv1
+						spellType += "Cone";
+						break;
+					case TargetTypes::Beam://Directional
+						spellType += "Beam";
+						break;
+					case TargetTypes::FreeTarget://Directional
+						spellType += "Splash";
 						break;
 					}
 				}
@@ -860,23 +909,17 @@ bool MQ2SpellsType::ConfigureSpells() {
 						}
 						break;
 					case EQCharacterClasses::ShadowKnight:
+						//This will work as long as they stick with the naming scheme, I'm sure they'll add more later, but works up till lvl 95
+						// after that you might get a mana tap proc as your LeechProc
 						if (strstr(spell->Name, "Skin"))
 						{
 							spellType = "DefensiveProc";
 						}
+						else if (strstr(spell->Name, "Horror")) {
+							spellType = "LeechProc";
+						}
 						else {
-							switch (spell->SpellGroup)
-							{
-							case 6029:
-								spellType = "KillProc";
-								break;
-							case 6032:
-								spellType = "LeechProc";
-								break;
-							default:
-								spellType = "TapProc";
-								break;
-							}
+							spellType = "TapProc";
 						}
 					default:
 						break;
@@ -915,6 +958,10 @@ bool MQ2SpellsType::ConfigureSpells() {
 						if (strstr(spell->Name, "Iceflame of E`ci"))
 							spellType = "ColdDmgBuff";
 						break;
+					case EQCharacterClasses::ShadowKnight:
+					case EQCharacterClasses::Necromancer:
+						if (spell->spaindex == 19)
+							spellType = "FeignDeath";
 					}
 					break;
 				}
@@ -971,7 +1018,17 @@ bool MQ2SpellsType::ConfigureSpells() {
 					}
 					break;
 				case SpellSubCategories::Jolt:
-					spellType = "Jolt";
+					if (strstr(spell->Name, "for Power"))
+					{
+						spellType = "ChallengeJolt";
+					}
+					else if (spell->TargetType == TargetTypes::PBAE) {
+						spellType = "PBAEJolt";
+					}
+					else
+					{
+						spellType = "Jolt";
+					}
 					break;
 				case SpellSubCategories::ResistDebuffs:
 					if (characterClass == EQCharacterClasses::Enchanter)
@@ -1056,7 +1113,7 @@ bool MQ2SpellsType::ConfigureSpells() {
 					spellType = "Fire";
 					break;
 				case SpellSubCategories::Magic:
-					if (strstr(spell->Name, "Splurt") || strstr(spell->Name, "Splort") || strstr(spell->Name, "Splart"))
+					if (strstr(spell->Name, "Splurt") || strstr(spell->Name, "Splort") || strstr(spell->Name, "Splart") || strstr(spell->Name, "Splirt"))
 					{
 						spellType = "Splurt";
 					}
@@ -1132,9 +1189,44 @@ bool MQ2SpellsType::ConfigureSpells() {
 				case SpellSubCategories::SumSwarm:
 					spellType = "SwarmPet";
 					break;
+				case SpellSubCategories::Block:
+					spellType = "PetBlock";
+					break;
+				case SpellSubCategories::ResistBuff:
+					spellType = "PetResist";
+					break;
 				case SpellSubCategories::PetMiscBuffs:
-					if (strstr(spell->Name, "Iceflame") || strncmp("Spirit of ", spell->Name, 10) == 0)
+					if (characterClass == EQCharacterClasses::Beastlord)
+					{
+						if (strstr(spell->Name, "Spirit of"))
+						{
+							spellType = "PetProc";
+						}
+						else if (strstr(spell->Name, "Warder"))
+						{
+							spellType = "PetTwincastHealProc";
+						}
+						else if (strstr(spell->Name, "Growl of the"))
+						{
+							spellType = "PetGrowl";
+						}
+						else if (strstr(spell->Name, "Protection"))
+						{
+							spellType = "PetProtection";
+						}
+						else if (strstr(spell->Name, "Aggression"))
+						{
+							spellType = "PetAggression";
+						}
+						else if (strstr(spell->Name, "Jaws"))
+						{
+							spellType = "PetJaws";
+						}
+					}
+					else if (strstr(spell->Name, "Iceflame") || strncmp("Spirit of ", spell->Name, 10) == 0)
+					{
 						spellType = "PetProc";
+					}
 					break;
 				case SpellSubCategories::SumAnimation:
 					spellType = "Pet";
@@ -1227,7 +1319,12 @@ bool MQ2SpellsType::ConfigureSpells() {
 				}
 				else if (spellType == "Jolt" && characterClass == EQCharacterClasses::ShadowKnight)
 				{
+
 					SetJoltSpell(spell, characterClass);
+				}
+				else if (spellType == "Charm")
+				{
+					SetCharmSpell(spell,characterClass);
 				}
 				else
 				{
@@ -1335,7 +1432,7 @@ std::string MQ2SpellsType::FindHealSpell(PSPELL spell)
 {
 	if (!strcmp(spell->Name, "Complete Heal"))
 		return "CompleteHeal";
-	if (spell->TargetType == TargetTypes::Groupv1/*Group v1*/)
+	if (spell->TargetType == TargetTypes::Groupv1 || spell->TargetType == TargetTypes::Groupv2)
 		return "GroupHeal";
 	if (strstr(spell->Name, "Renewal"))
 		return "HealCure";
@@ -1536,6 +1633,30 @@ void MQ2SpellsType::SetStunSpell(PSPELL spell, const int characterClass) {
 		}
 	}
 };
+
+void MQ2SpellsType::SetCharmSpell(_SPELL* spell, int characterClass)
+{
+	const auto currentCharm = Spells.find("Charm");
+	if(currentCharm == Spells.end())
+	{
+		Spells.insert_or_assign("Charm",spell);
+	} else
+	{
+		auto* const pSpawn = GetCharInfo()->pSpawn;
+		auto currentDuration = GetSpellDuration(currentCharm->second, pSpawn);
+		auto maxCurrentLevel = GetSpellMax(currentCharm->second,0);
+		auto maxCompareLevel =  GetSpellMax(spell,0);
+		auto compareDuration = GetSpellDuration(spell,pSpawn);
+		if(currentDuration <= 12000 && maxCurrentLevel - maxCompareLevel < 5 && currentDuration < compareDuration)
+		{
+			Spells.insert_or_assign("Charm",spell);
+		}
+		else if (maxCurrentLevel < maxCompareLevel)
+		{
+			Spells.insert_or_assign("Charm",spell);
+		}
+	}
+}
 
 bool MQ2SpellsType::IsWorseJoltSpell(_SPELL* const currentWorst, _SPELL* const compareTo, const int characterClass)
 {

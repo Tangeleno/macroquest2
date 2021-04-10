@@ -131,6 +131,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Feedme", "MQ2Feedme\MQ2F
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2TangSM", "MQ2TangSM\MQ2TangSM.vcxproj", "{BEC70255-DC5E-4E99-8965-E6D52E95B44B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MQ2Netheal", "MQ2Netheal\MQ2Netheal.vcxproj", "{E3AA5B70-715B-4A3F-BE27-9523010591A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -330,6 +332,12 @@ Global
 		{BEC70255-DC5E-4E99-8965-E6D52E95B44B}.Release|Win32.Build.0 = Release|Win32
 		{BEC70255-DC5E-4E99-8965-E6D52E95B44B}.xDebug|Win32.ActiveCfg = Debug|Win32
 		{BEC70255-DC5E-4E99-8965-E6D52E95B44B}.xDebug|Win32.Build.0 = Debug|Win32
+		{E3AA5B70-715B-4A3F-BE27-9523010591A7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E3AA5B70-715B-4A3F-BE27-9523010591A7}.Debug|Win32.Build.0 = Debug|Win32
+		{E3AA5B70-715B-4A3F-BE27-9523010591A7}.Release|Win32.ActiveCfg = Release|Win32
+		{E3AA5B70-715B-4A3F-BE27-9523010591A7}.Release|Win32.Build.0 = Release|Win32
+		{E3AA5B70-715B-4A3F-BE27-9523010591A7}.xDebug|Win32.ActiveCfg = Debug|Win32
+		{E3AA5B70-715B-4A3F-BE27-9523010591A7}.xDebug|Win32.Build.0 = Debug|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
