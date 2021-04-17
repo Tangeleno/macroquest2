@@ -1647,11 +1647,10 @@ void MQ2SpellsType::SetCharmSpell(_SPELL* spell, int characterClass)
 		auto maxCurrentLevel = GetSpellMax(currentCharm->second,0);
 		auto maxCompareLevel =  GetSpellMax(spell,0);
 		auto compareDuration = GetSpellDuration(spell,pSpawn);
-		if(currentDuration <= 12000 && maxCurrentLevel - maxCompareLevel < 5 && currentDuration < compareDuration)
-		{
-			Spells.insert_or_assign("Charm",spell);
-		}
-		else if (maxCurrentLevel < maxCompareLevel)
+		DebugSpewAlways("Comparing charm current charm '%s' to '%s'",currentCharm->second->Name,spell->Name);
+		DebugSpewAlways("Charm Check '%s' has a duration of %d",spell->Name,compareDuration);
+		
+		if(maxCompareLevel > maxCurrentLevel && (compareDuration > 10 || compareDuration == currentDuration || maxCompareLevel - maxCurrentLevel > 10))
 		{
 			Spells.insert_or_assign("Charm",spell);
 		}
